@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	provider "github.com/hugomatus/kube-drift/api/drift"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -55,6 +56,9 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	fmt.Printf("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
+
+	kubedrift := provider.KubeDrift{}
+	kubedrift.New(pod)
 	return ctrl.Result{}, nil
 }
 

@@ -1,0 +1,73 @@
+{
+  "key": "",
+  "uuid": "444cd945-2ff1-401e-a0b5-f3f3ef040690",
+  "resourceVersion": "16564",
+  "name": "dashboard-metrics-scraper-5594458c94-4s78n",
+  "generationName": "dashboard-metrics-scraper-5594458c94-",
+  "templateHash": "",
+  "namespace": "kubernetes-dashboard",
+  "kind": "Pod",
+  "creationTime": "0001-01-01T00:00:00Z",
+  "labels": {
+    "k8s-app": "dashboard-metrics-scraper",
+    "pod-template-hash": "5594458c94"
+  },
+  "annotations": {
+    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default"
+  },
+  "status": {
+    "phase": "Running",
+    "conditions": [
+      {
+        "type": "Initialized",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2021-12-16T01:53:55Z"
+      },
+      {
+        "type": "Ready",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2021-12-16T01:53:56Z"
+      },
+      {
+        "type": "ContainersReady",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2021-12-16T01:53:56Z"
+      },
+      {
+        "type": "PodScheduled",
+        "status": "True",
+        "lastProbeTime": null,
+        "lastTransitionTime": "2021-12-16T01:53:55Z"
+      }
+    ],
+    "hostIP": "192.168.58.2",
+    "podIP": "172.17.0.4",
+    "podIPs": [
+      {
+        "ip": "172.17.0.4"
+      }
+    ],
+    "startTime": "2021-12-16T01:53:55Z",
+    "containerStatuses": [
+      {
+        "name": "dashboard-metrics-scraper",
+        "state": {
+          "running": {
+            "startedAt": "2021-12-16T01:53:56Z"
+          }
+        },
+        "lastState": {},
+        "ready": true,
+        "restartCount": 0,
+        "image": "kubernetesui/metrics-scraper:v1.0.7",
+        "imageID": "docker-pullable://kubernetesui/metrics-scraper@sha256:36d5b3f60e1a144cc5ada820910535074bdf5cf73fb70d1ff1681537eef4e172",
+        "containerID": "docker://d9f3d5ade15d1dd0fdad25f13f716f93b5027b174d3de81fd8afa748a40aa29f",
+        "started": true
+      }
+    ],
+    "qosClass": "BestEffort"
+  }
+}
