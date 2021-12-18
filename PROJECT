@@ -9,4 +9,34 @@ resources:
   kind: Pod
   path: k8s.io/api/core/v1
   version: v1
+- controller: true
+  group: core
+  kind: Event
+  path: k8s.io/api/core/v1
+  version: v1
+- controller: true
+  group: core
+  kind: Node
+  path: k8s.io/api/core/v1
+  version: v1
+- controller: true
+  group: core
+  kind: Deployment
+  path: k8s.io/api/core/v1
+  version: v1
+- controller: true
+  domain: kubedrift.io
+  group: v1
+  kind: Deployment
+  version: v1
+- controller: true
+  domain: kubedrift.io
+  group: apps.k8s.io
+  kind: Deployment
+  version: v1
+- controller: true
+  domain: kubedrift.io
+  group: appsv1
+  kind: Deployment
+  version: v1
 version: "3"
