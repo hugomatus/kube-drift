@@ -39,4 +39,9 @@ resources:
   group: appsv1
   kind: Deployment
   version: v1
+- controller: true
+  group: apps
+  kind: Deployment
+  path: k8s.io/api/apps/v1
+  version: v1
 version: "3"
