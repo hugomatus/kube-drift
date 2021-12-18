@@ -1,0 +1,6 @@
+domain: kubedrift.io
+layout:
+- go.kubebuilder.io/v3
+projectName: kube-drift
+repo: github.com/hugomatus/kube-drift
+version: "3"
