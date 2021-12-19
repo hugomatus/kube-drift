@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"time"
 )
@@ -32,7 +33,6 @@ func (p *KubeDrift) New(drift interface{}) {
 
 	switch v := drift.(type) {
 	case corev1.Pod:
-		fmt.Printf("%T\n", v)
 		o := (drift).(corev1.Pod)
 		p.UUID = string(o.ObjectMeta.UID)
 		p.ResourceVersion = o.ObjectMeta.ResourceVersion
@@ -47,7 +47,6 @@ func (p *KubeDrift) New(drift interface{}) {
 
 		p.drift = drift
 	case corev1.Node:
-		fmt.Printf("%T\n", v)
 		o := (drift).(corev1.Node)
 		p.UUID = string(o.ObjectMeta.UID)
 		p.ResourceVersion = o.ObjectMeta.ResourceVersion
@@ -60,7 +59,19 @@ func (p *KubeDrift) New(drift interface{}) {
 		p.Status = o.Status
 		//p.Spec = drift.Spec
 		p.drift = drift
-	case corev1.Event:
+	case appsv1.Deployment:
+		o := (drift).(appsv1.Deployment)
+		p.UUID = string(o.ObjectMeta.UID)
+		p.ResourceVersion = o.ObjectMeta.ResourceVersion
+		p.Name = o.ObjectMeta.Name
+		p.GenerationName = o.ObjectMeta.GenerateName
+		p.Namespace = o.ObjectMeta.Namespace
+		p.Kind = o.Kind
+		p.Labels = o.ObjectMeta.Labels
+		p.Annotations = o.ObjectMeta.Annotations
+		p.Status = o.Status
+		//p.Spec = drift.Spec
+		p.drift = drift
 	default:
 		fmt.Printf("I don't know about type %T!\n", v)
 	}

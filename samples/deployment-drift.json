@@ -1,0 +1,44 @@
+{
+  "key": "",
+  "uuid": "c04af082-5a21-4f6a-a906-63c76432aead",
+  "resourceVersion": "16568",
+  "name": "dashboard-metrics-scraper",
+  "generationName": "",
+  "namespace": "kubernetes-dashboard",
+  "kind": "Deployment",
+  "creationTime": "0001-01-01T00:00:00Z",
+  "labels": {
+    "addonmanager.kubernetes.io/mode": "Reconcile",
+    "k8s-app": "dashboard-metrics-scraper",
+    "kubernetes.io/minikube-addons": "dashboard"
+  },
+  "annotations": {
+    "deployment.kubernetes.io/revision": "1",
+    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"labels\":{\"addonmanager.kubernetes.io/mode\":\"Reconcile\",\"k8s-app\":\"dashboard-metrics-scraper\",\"kubernetes.io/minikube-addons\":\"dashboard\"},\"name\":\"dashboard-metrics-scraper\",\"namespace\":\"kubernetes-dashboard\"},\"spec\":{\"replicas\":1,\"revisionHistoryLimit\":10,\"selector\":{\"matchLabels\":{\"k8s-app\":\"dashboard-metrics-scraper\"}},\"template\":{\"metadata\":{\"annotations\":{\"seccomp.security.alpha.kubernetes.io/pod\":\"runtime/default\"},\"labels\":{\"k8s-app\":\"dashboard-metrics-scraper\"}},\"spec\":{\"containers\":[{\"image\":\"kubernetesui/metrics-scraper:v1.0.7@sha256:36d5b3f60e1a144cc5ada820910535074bdf5cf73fb70d1ff1681537eef4e172\",\"livenessProbe\":{\"httpGet\":{\"path\":\"/\",\"port\":8000,\"scheme\":\"HTTP\"},\"initialDelaySeconds\":30,\"timeoutSeconds\":30},\"name\":\"dashboard-metrics-scraper\",\"ports\":[{\"containerPort\":8000,\"protocol\":\"TCP\"}],\"securityContext\":{\"allowPrivilegeEscalation\":false,\"readOnlyRootFilesystem\":true,\"runAsGroup\":2001,\"runAsUser\":1001},\"volumeMounts\":[{\"mountPath\":\"/tmp\",\"name\":\"tmp-volume\"}]}],\"nodeSelector\":{\"beta.kubernetes.io/os\":\"linux\"},\"serviceAccountName\":\"kubernetes-dashboard\",\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"node-role.kubernetes.io/master\"}],\"volumes\":[{\"emptyDir\":{},\"name\":\"tmp-volume\"}]}}}}\n"
+  },
+  "status": {
+    "observedGeneration": 1,
+    "replicas": 1,
+    "updatedReplicas": 1,
+    "readyReplicas": 1,
+    "availableReplicas": 1,
+    "conditions": [
+      {
+        "type": "Progressing",
+        "status": "True",
+        "lastUpdateTime": "2021-12-15T19:42:39Z",
+        "lastTransitionTime": "2021-12-15T19:42:36Z",
+        "reason": "NewReplicaSetAvailable",
+        "message": "ReplicaSet \"dashboard-metrics-scraper-5594458c94\" has successfully progressed."
+      },
+      {
+        "type": "Available",
+        "status": "True",
+        "lastUpdateTime": "2021-12-16T01:53:56Z",
+        "lastTransitionTime": "2021-12-16T01:53:56Z",
+        "reason": "MinimumReplicasAvailable",
+        "message": "Deployment has minimum availability."
+      }
+    ]
+  }
+}

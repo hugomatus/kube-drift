@@ -53,12 +53,8 @@ func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	if err := r.Get(ctx, req.NamespacedName, &node); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	cpu := node.Status.Capacity.Cpu()
-	pods := node.Status.Capacity.Pods()
-	storage := node.Status.Capacity.Storage()
-	fmt.Printf("Reconciling Node %s\n", node.Name)
-	fmt.Printf("Node %s has %s CPU, %s pods and %s storage\n", node.Name, cpu, pods, storage)
 
+	fmt.Printf("Reconciling Node %s\n", node.Name)
 	return ctrl.Result{}, nil
 }
 

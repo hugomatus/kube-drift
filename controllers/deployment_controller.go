@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -56,16 +55,8 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	desired := deployment.Spec.Replicas
-	available := deployment.Status.AvailableReplicas
-	ready := deployment.Status.ReadyReplicas
-	unavailable := deployment.Status.UnavailableReplicas
 	fmt.Printf("Reconciling Deployment %s/%s\n", deployment.Namespace, deployment.Name)
 
-	fmt.Printf("Deployment %s has %d replicas\n", deployment.Name, desired)
-	fmt.Printf("Deployment %s has %d available replicas\n", deployment.Name, available)
-	fmt.Printf("Deployment %s has %d ready replicas\n", deployment.Name, ready)
-	fmt.Printf("Deployment %s has %d unavailable replicas\n", deployment.Name, unavailable)
 	return ctrl.Result{}, nil
 }
 
