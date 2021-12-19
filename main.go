@@ -121,4 +121,18 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+/*	store := provider.Store{}
+	store.New("/tmp/kube-drift")
+
+	setupLog.Info("Start API Server::ListenAndServe on port 8001")
+	r := mux.NewRouter()
+	api.Manager(r, store)
+	// Bind to a port and pass our router in
+	err = http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
+
+	if err != nil {
+		setupLog.Error(err, "Error starting server")
+	}*/
+
 }

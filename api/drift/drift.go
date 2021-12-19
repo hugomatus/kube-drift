@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,21 +11,46 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// DashboardRouter defines the usable API routes
-func DashboardRouter(r *mux.Router, db *sql.DB) {
-	r.Path("/node").HandlerFunc(nodeHandler(db))
-	r.Path("/namespaces/{Namespace}}").HandlerFunc(podHandler(db))
+// APIRouter defines the usable API routes
+func APIRouter(r *mux.Router, store Store) {
+	r.Path("/pods").HandlerFunc(driftHandler("/pod", store))
+	r.Path("/nodes").HandlerFunc(driftHandler("/node", store))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 
-func podHandler(db *sql.DB) func(http.ResponseWriter, *http.Request) {
+func driftHandler(keyPrefix string, store Store) func(http.ResponseWriter, *http.Request) {
 
-	return nil
-}
+	fn := func(w http.ResponseWriter, r *http.Request) {
 
-func nodeHandler(db *sql.DB) func(http.ResponseWriter, *http.Request) {
+		//vars := mux.Vars(r)
 
-	return nil
+		//fmt.Println("nodePodHandler: %v", vars["event"])
+		resp, err := store.GetDriftByKeyPrefix(keyPrefix)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		j, err := json.Marshal(resp)
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, err := w.Write([]byte(fmt.Sprintf("JSON Error - %v", err)))
+			if err != nil {
+				//fmt.Printf("Error cannot write response: %v", err)
+			}
+		}
+
+		_, err = w.Write(j)
+		if err != nil {
+			fmt.Printf("Error cannot write response: %v", err)
+		}
+	}
+
+	return fn
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {

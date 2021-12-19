@@ -1,20 +1,19 @@
 package api
 
 import (
-	"database/sql"
 	"fmt"
+	provider "github.com/hugomatus/kube-drift/api/drift"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	dashboardProvider "github.com/kubernetes-sigs/dashboard-metrics-scraper/pkg/api/dashboard"
 	_ "github.com/mattn/go-sqlite3"
 	log "github.com/sirupsen/logrus"
 )
 
 // Manager provides a handler for all api calls
-func Manager(r *mux.Router, db *sql.DB) {
-	dashboardRouter := r.PathPrefix("/api/v1/dashboard").Subrouter()
-	dashboardProvider.DashboardRouter(dashboardRouter, db)
+func Manager(r *mux.Router, store provider.Store) {
+	router := r.PathPrefix("/api/v1/drift").Subrouter()
+	provider.APIRouter(router, store)
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
 }
 

@@ -26,7 +26,9 @@ type KubeDrift struct {
 }
 
 func (p *KubeDrift) GetKey() string {
-	return p.UUID
+
+	key := fmt.Sprintf("/%s/%s/%s/%s", p.Kind, p.Namespace, p.Name, p.UUID)
+	return key
 }
 
 func (p *KubeDrift) New(drift interface{}) {
@@ -98,17 +100,17 @@ func Marshal(e corev1.Event) string {
 	return string(j)
 }
 
-func (p *KubeDrift) serialize(obj *KubeDrift) []byte {
+func (p *KubeDrift) Serialize() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(obj)
+	err := enc.Encode(p)
 	if err != nil {
 		fmt.Printf("error encoding object: %v", err)
 	}
 	return buf.Bytes()
 }
 
-func (p *KubeDrift) deserialize(data []byte) KubeDrift {
+func Deserialize(data []byte) KubeDrift {
 	obj := KubeDrift{}
 	dec := gob.NewDecoder(bytes.NewReader(data))
 	err := dec.Decode(&obj)
