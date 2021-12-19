@@ -27,8 +27,13 @@ func (s *Store) New(path string) error {
 	return nil
 }
 
-func (s *Store) Save(data []byte) (string, error) {
-	return "key", nil
+func (s *Store) Save(drift KubeDrift) (string, error) {
+	key := drift.GetKey() //fmt.Sprintf("%s/%s/%s", event, p.Namespace, p.UID)
+	err := s.db.Put([]byte(key), []byte(drift.Serialize()), nil)
+	if err != nil {
+		return "", err
+	}
+	return key, nil
 }
 
 func (s *Store) GetDriftByKey(key string) (KubeDrift, error) {

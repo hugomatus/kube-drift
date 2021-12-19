@@ -18,6 +18,11 @@ package main
 
 import (
 	"flag"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/hugomatus/kube-drift/api"
+	provider "github.com/hugomatus/kube-drift/api/drift"
+	"net/http"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -61,6 +66,21 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	go func() {
+		store := provider.Store{}
+		store.New("/tmp/kube-drift")
+
+		setupLog.Info("Start API Server::ListenAndServe on port 8001")
+		r := mux.NewRouter()
+		api.Manager(r, store)
+		// Bind to a port and pass our router in
+		err := http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
+
+		if err != nil {
+			setupLog.Error(err, "Error starting server")
+		}
+	}()
+
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -75,7 +95,7 @@ func main() {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-
+	//+kubebuilder:scaffold:builder
 	if err = (&controllers.PodReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -105,7 +125,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Deployment")
 		os.Exit(1)
 	}
-	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
@@ -121,18 +140,5 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
-/*	store := provider.Store{}
-	store.New("/tmp/kube-drift")
-
-	setupLog.Info("Start API Server::ListenAndServe on port 8001")
-	r := mux.NewRouter()
-	api.Manager(r, store)
-	// Bind to a port and pass our router in
-	err = http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
-
-	if err != nil {
-		setupLog.Error(err, "Error starting server")
-	}*/
 
 }
