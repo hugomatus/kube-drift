@@ -31,6 +31,7 @@ import (
 type PodReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	store  *provider.Store
 }
 
 //+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -56,13 +57,14 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	fmt.Printf("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
-	kubedrift := provider.KubeDrift{}
-	kubedrift.New(pod)
+	kubedrift := provider.New(pod, "delete")
+	r.store.Save(*kubedrift)
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Store) error {
+	r.store = store
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
 		Complete(r)

@@ -3,6 +3,7 @@ package provider
 import (
 	"encoding/json"
 	"fmt"
+	"k8s.io/klog/v2"
 	"net/http"
 	"time"
 
@@ -12,20 +13,34 @@ import (
 )
 
 // APIRouter defines the usable API routes
-func APIRouter(r *mux.Router, store Store) {
-	r.Path("/pods").HandlerFunc(driftHandler("/pod", store))
-	r.Path("/nodes").HandlerFunc(driftHandler("/node", store))
+func APIRouter(r *mux.Router, store *Store) {
+	r.Path("/{kind}").HandlerFunc(driftHandler(store))
+	r.Path("/{kind}/{namespace}").HandlerFunc(driftHandler(store))
+	r.Path("/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(store))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 
-func driftHandler(keyPrefix string, store Store) func(http.ResponseWriter, *http.Request) {
-
+func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
-		//vars := mux.Vars(r)
+		vars := mux.Vars(r)
 
-		//fmt.Println("nodePodHandler: %v", vars["event"])
-		resp, err := store.GetDriftByKeyPrefix(keyPrefix)
+		kind := vars["kind"]
+		namespace := vars["namespace"]
+		templateHash := vars["template-hash"]
+
+		prefix := fmt.Sprintf("/%s/%s", kind, namespace)
+
+		if namespace == "" {
+			prefix = fmt.Sprintf("/%s", kind)
+		}
+
+		if namespace != "" && templateHash != "" {
+			prefix = fmt.Sprintf("/%s/%s/%s", kind, namespace, templateHash)
+		}
+
+		klog.Infof("driftHandler: %v", prefix)
+		resp, err := store.GetDriftByKeyPrefix(prefix)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

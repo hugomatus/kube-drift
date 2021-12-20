@@ -53,7 +53,7 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err := r.Get(ctx, req.NamespacedName, event); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	fmt.Printf("Reconciling Event %s/%s\n Reason: %s\n Message: %s\n", event.Namespace, event.Name, event.Reason, event.Message)
+	fmt.Printf("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
 	return ctrl.Result{}, nil
 }
 

@@ -6,81 +6,222 @@ import (
 	"encoding/json"
 	"fmt"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"time"
 )
 
+type Event struct {
+	InvolvedObject      v1.ObjectReference  `json:"involvedObject" protobuf:"bytes,2,opt,name=involvedObject"`
+	Reason              string              `json:"reason,omitempty" protobuf:"bytes,3,opt,name=reason"`
+	Message             string              `json:"message,omitempty" protobuf:"bytes,4,opt,name=message"`
+	Source              v1.EventSource      `json:"source,omitempty" protobuf:"bytes,5,opt,name=source"`
+	FirstTimestamp      metav1.Time         `json:"firstTimestamp,omitempty" protobuf:"bytes,6,opt,name=firstTimestamp"`
+	LastTimestamp       metav1.Time         `json:"lastTimestamp,omitempty" protobuf:"bytes,7,opt,name=lastTimestamp"`
+	Count               int32               `json:"count,omitempty" protobuf:"varint,8,opt,name=count"`
+	Type                string              `json:"type,omitempty" protobuf:"bytes,9,opt,name=type"`
+	EventTime           metav1.MicroTime    `json:"eventTime,omitempty" protobuf:"bytes,10,opt,name=eventTime"`
+	Series              *v1.EventSeries     `json:"series,omitempty" protobuf:"bytes,11,opt,name=series"`
+	Action              string              `json:"action,omitempty" protobuf:"bytes,12,opt,name=action"`
+	Related             *v1.ObjectReference `json:"related,omitempty" protobuf:"bytes,13,opt,name=related"`
+	ReportingController string              `json:"reportingComponent" protobuf:"bytes,14,opt,name=reportingComponent"`
+	ReportingInstance   string              `json:"reportingInstance" protobuf:"bytes,15,opt,name=reportingInstance"`
+}
+
+type MetaData struct {
+	Name              string            `json:"name"`
+	Namespace         string            `json:"namespace"`
+	Kind              string            `json:"kind"`
+	UUID              string            `json:"uuid"`
+	ResourceVersion   string            `json:"resourceVersion"`
+	CreationTimestamp metav1.Time       `json:"creationTimestamp"`
+	Labels            map[string]string `json:"labels"`
+	Annotations       map[string]string `json:"annotations"`
+	GenerationName    string            `json:"generationName"`
+	CreationTime      time.Time         `json:"creationTime"`
+	CreatedByKind     string            `json:"createdByKind"`
+	CreatedByName     string            `json:"createdByName"`
+}
+
+type ObjectMeta struct {
+	Name                       string                  `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
+	GenerateName               string                  `json:"generateName,omitempty" protobuf:"bytes,2,opt,name=generateName"`
+	Namespace                  string                  `json:"namespace,omitempty" protobuf:"bytes,3,opt,name=namespace"`
+	UID                        types.UID               `json:"uid,omitempty" protobuf:"bytes,5,opt,name=uid,casttype=k8s.io/kubernetes/pkg/types.UID"`
+	ResourceVersion            string                  `json:"resourceVersion,omitempty" protobuf:"bytes,6,opt,name=resourceVersion"`
+	Generation                 int64                   `json:"generation,omitempty" protobuf:"varint,7,opt,name=generation"`
+	CreationTimestamp          metav1.Time             `json:"creationTimestamp,omitempty" protobuf:"bytes,8,opt,name=creationTimestamp"`
+	DeletionTimestamp          *metav1.Time            `json:"deletionTimestamp,omitempty" protobuf:"bytes,9,opt,name=deletionTimestamp"`
+	DeletionGracePeriodSeconds *int64                  `json:"deletionGracePeriodSeconds,omitempty" protobuf:"varint,10,opt,name=deletionGracePeriodSeconds"`
+	Labels                     map[string]string       `json:"labels,omitempty" protobuf:"bytes,11,rep,name=labels"`
+	Annotations                map[string]string       `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
+	OwnerReferences            []metav1.OwnerReference `json:"ownerReferences,omitempty" patchStrategy:"merge" patchMergeKey:"uid" protobuf:"bytes,13,rep,name=ownerReferences"`
+	Finalizers                 []string                `json:"finalizers,omitempty" patchStrategy:"merge" protobuf:"bytes,14,rep,name=finalizers"`
+	ClusterName                string                  `json:"clusterName,omitempty" protobuf:"bytes,15,opt,name=clusterName"`
+}
+
 type KubeDrift struct {
-	Key             string            `json:"key"`
-	UUID            string            `json:"uuid"`
-	ResourceVersion string            `json:"resourceVersion"`
-	Name            string            `json:"name"`
-	GenerationName  string            `json:"generationName"`
-	Namespace       string            `json:"namespace"`
-	Kind            string            `json:"kind"`
-	CreationTime    time.Time         `json:"creationTime"`
-	Labels          map[string]string `json:"labels"`
-	Annotations     map[string]string `json:"annotations"`
-	Status          interface{}       `json:"status"`
-	drift           interface{}
+	key       string
+	Type      string      `json:"type"`
+	EventType string      `json:"eventType"`
+	MetaData  ObjectMeta  `json:"metaData"`
+	Status    interface{} `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	Event     interface{} `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
+}
+
+func (p *KubeDrift) SetKey() {
+
+	if p.MetaData.Namespace == "" {
+		p.MetaData.Namespace = "none"
+	}
+
+	key := fmt.Sprintf("/%s/%s/%s/%s", p.Type, p.MetaData.Namespace, p.MetaData.Name, p.MetaData.UID)
+	klog.Infof("key: %s", key)
+	p.key = key
 }
 
 func (p *KubeDrift) GetKey() string {
-
-	key := fmt.Sprintf("/%s/%s/%s/%s", p.Kind, p.Namespace, p.Name, p.UUID)
-	return key
+	if p.key == "" {
+		p.SetKey()
+	}
+	return p.key
 }
 
-func (p *KubeDrift) New(drift interface{}) {
-
+func New(drift interface{}, eventType string) *KubeDrift {
+	p := &KubeDrift{}
 	switch v := drift.(type) {
-	case corev1.Pod:
-		o := (drift).(corev1.Pod)
-		p.UUID = string(o.ObjectMeta.UID)
-		p.ResourceVersion = o.ObjectMeta.ResourceVersion
-		p.Name = o.ObjectMeta.Name
-		p.GenerationName = o.ObjectMeta.GenerateName
-		p.Namespace = o.ObjectMeta.Namespace
-		p.Kind = o.Kind
-		p.Labels = o.ObjectMeta.Labels
-		p.Annotations = o.ObjectMeta.Annotations
-		p.Status = o.Status
-		//p.Spec = drift.Spec
-
-		p.drift = drift
-	case corev1.Node:
-		o := (drift).(corev1.Node)
-		p.UUID = string(o.ObjectMeta.UID)
-		p.ResourceVersion = o.ObjectMeta.ResourceVersion
-		p.Name = o.ObjectMeta.Name
-		p.GenerationName = o.ObjectMeta.GenerateName
-		p.Namespace = o.ObjectMeta.Namespace
-		p.Kind = o.Kind
-		p.Labels = o.ObjectMeta.Labels
-		p.Annotations = o.ObjectMeta.Annotations
-		p.Status = o.Status
-		//p.Spec = drift.Spec
-		p.drift = drift
-	case appsv1.Deployment:
-		o := (drift).(appsv1.Deployment)
-		p.UUID = string(o.ObjectMeta.UID)
-		p.ResourceVersion = o.ObjectMeta.ResourceVersion
-		p.Name = o.ObjectMeta.Name
-		p.GenerationName = o.ObjectMeta.GenerateName
-		p.Namespace = o.ObjectMeta.Namespace
-		p.Kind = o.Kind
-		p.Labels = o.ObjectMeta.Labels
-		p.Annotations = o.ObjectMeta.Annotations
-		p.Status = o.Status
-		//p.Spec = drift.Spec
-		p.drift = drift
+	case v1.Pod:
+		klog.Infof("Processing type %T!\n", v)
+		o := (drift).(v1.Pod)
+		p.newPod(eventType, o)
+	case *v1.Node:
+		o := (drift).(*v1.Node)
+		p.newNode(eventType, o)
+	case *v1.Event:
+		o := (drift).(*v1.Event)
+		p.newEvent(eventType, o)
+	case *appsv1.Deployment:
+		o := (drift).(*appsv1.Deployment)
+		p.newDeployment(eventType, o)
 	default:
-		fmt.Printf("I don't know about type %T!\n", v)
+		klog.Infof("I don't know about type %T!\n", v)
+	}
+
+	klog.Infof("%+v", string(p.Marshal()))
+	return p
+}
+
+func (p *KubeDrift) newDeployment(eventType string, o *appsv1.Deployment) {
+	p.Type = "deployment"
+	p.EventType = eventType
+	p.MetaData = ObjectMeta{
+		Name:                       o.ObjectMeta.Name,
+		GenerateName:               o.ObjectMeta.GenerateName,
+		Namespace:                  o.ObjectMeta.Namespace,
+		UID:                        o.ObjectMeta.UID,
+		ResourceVersion:            o.ObjectMeta.ResourceVersion,
+		Generation:                 o.ObjectMeta.Generation,
+		CreationTimestamp:          o.ObjectMeta.CreationTimestamp,
+		DeletionTimestamp:          o.ObjectMeta.DeletionTimestamp,
+		DeletionGracePeriodSeconds: o.ObjectMeta.DeletionGracePeriodSeconds,
+		Labels:                     o.ObjectMeta.Labels,
+		Annotations:                o.ObjectMeta.Annotations,
+		OwnerReferences:            o.ObjectMeta.OwnerReferences,
+		Finalizers:                 o.ObjectMeta.Finalizers,
+		ClusterName:                o.ObjectMeta.ClusterName,
+	}
+	p.Status = o.Status
+	p.SetKey()
+}
+
+func (p *KubeDrift) newEvent(eventType string, o *v1.Event) {
+	p.Type = "event"
+	p.EventType = eventType
+	p.newEventDetails(o)
+	p.MetaData = ObjectMeta{
+		Name:                       o.ObjectMeta.Name,
+		GenerateName:               o.ObjectMeta.GenerateName,
+		Namespace:                  o.ObjectMeta.Namespace,
+		UID:                        o.ObjectMeta.UID,
+		ResourceVersion:            o.ObjectMeta.ResourceVersion,
+		Generation:                 o.ObjectMeta.Generation,
+		CreationTimestamp:          o.ObjectMeta.CreationTimestamp,
+		DeletionTimestamp:          o.ObjectMeta.DeletionTimestamp,
+		DeletionGracePeriodSeconds: o.ObjectMeta.DeletionGracePeriodSeconds,
+		Labels:                     o.ObjectMeta.Labels,
+		Annotations:                o.ObjectMeta.Annotations,
+		OwnerReferences:            o.ObjectMeta.OwnerReferences,
+		Finalizers:                 o.ObjectMeta.Finalizers,
+		ClusterName:                o.ObjectMeta.ClusterName,
+	}
+	p.SetKey()
+}
+
+func (p *KubeDrift) newEventDetails(o *v1.Event) {
+	p.Event = Event{
+		InvolvedObject:      o.InvolvedObject,
+		Reason:              o.Reason,
+		Message:             o.Message,
+		Source:              o.Source,
+		FirstTimestamp:      o.FirstTimestamp,
+		LastTimestamp:       o.LastTimestamp,
+		Count:               o.Count,
+		Type:                o.Type,
+		EventTime:           o.EventTime,
+		Series:              o.Series,
+		Action:              o.Action,
+		Related:             o.Related,
+		ReportingController: o.ReportingController,
+		ReportingInstance:   o.ReportingInstance,
 	}
 }
 
-func (p *KubeDrift) GetDrift() interface{} {
-	return p.drift
+func (p *KubeDrift) newNode(eventType string, o *v1.Node) {
+	p.Type = "node"
+	p.EventType = eventType
+	p.MetaData = ObjectMeta{
+		Name:                       o.ObjectMeta.Name,
+		GenerateName:               o.ObjectMeta.GenerateName,
+		Namespace:                  o.ObjectMeta.Namespace,
+		UID:                        o.ObjectMeta.UID,
+		ResourceVersion:            o.ObjectMeta.ResourceVersion,
+		Generation:                 o.ObjectMeta.Generation,
+		CreationTimestamp:          o.ObjectMeta.CreationTimestamp,
+		DeletionTimestamp:          o.ObjectMeta.DeletionTimestamp,
+		DeletionGracePeriodSeconds: o.ObjectMeta.DeletionGracePeriodSeconds,
+		Labels:                     o.ObjectMeta.Labels,
+		Annotations:                o.ObjectMeta.Annotations,
+		OwnerReferences:            o.ObjectMeta.OwnerReferences,
+		Finalizers:                 o.ObjectMeta.Finalizers,
+		ClusterName:                o.ObjectMeta.ClusterName,
+	}
+	p.Status = o.Status
+	p.SetKey()
+}
+
+func (p *KubeDrift) newPod(eventType string, o v1.Pod) {
+	p.Type = "pod"
+	p.EventType = eventType
+	p.MetaData = ObjectMeta{
+		Name:                       o.ObjectMeta.Name,
+		GenerateName:               o.ObjectMeta.GenerateName,
+		Namespace:                  o.ObjectMeta.Namespace,
+		UID:                        o.ObjectMeta.UID,
+		ResourceVersion:            o.ObjectMeta.ResourceVersion,
+		Generation:                 o.ObjectMeta.Generation,
+		CreationTimestamp:          o.ObjectMeta.CreationTimestamp,
+		DeletionTimestamp:          o.ObjectMeta.DeletionTimestamp,
+		DeletionGracePeriodSeconds: o.ObjectMeta.DeletionGracePeriodSeconds,
+		Labels:                     o.ObjectMeta.Labels,
+		Annotations:                o.ObjectMeta.Annotations,
+		OwnerReferences:            o.ObjectMeta.OwnerReferences,
+		Finalizers:                 o.ObjectMeta.Finalizers,
+		ClusterName:                o.ObjectMeta.ClusterName,
+	}
+	p.Status = o.Status
+	p.SetKey()
 }
 
 func (p *KubeDrift) Marshal() string {
@@ -91,7 +232,7 @@ func (p *KubeDrift) Marshal() string {
 	return string(j)
 }
 
-func Marshal(e corev1.Event) string {
+func Marshal(e v1.Event) string {
 	j, err := json.Marshal(e)
 	if err != nil {
 		fmt.Println(err)
