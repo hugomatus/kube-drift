@@ -33,7 +33,7 @@ func (s *Store) Close() {
 	s.db.Close()
 }
 
-func (s *Store) Save(drift KubeDrift) error {
+func (s *Store) Save(drift Drift) error {
 	drift.SetKey() //fmt.Sprintf("%s/%s/%s", event, p.Namespace, p.UID)
 	data, err := json.Marshal(drift)
 
@@ -49,9 +49,9 @@ func (s *Store) Save(drift KubeDrift) error {
 	return nil
 }
 
-func (s *Store) GetDriftByKey(key string) (KubeDrift, error) {
+func (s *Store) GetDriftByKey(key string) (Drift, error) {
 
-	drift := KubeDrift{}
+	drift := Drift{}
 
 	data, err := s.db.Get([]byte(key), nil)
 	if err != nil {
@@ -64,7 +64,7 @@ func (s *Store) GetDriftByKey(key string) (KubeDrift, error) {
 	return drift, nil
 }
 
-func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]KubeDrift, error) {
+func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]Drift, error) {
 	klog.Infof("get drift by key prefix: %s", keyPrefix)
 	var iter iterator.Iterator
 	//iter = c.db.NewIterator(nil, nil)
@@ -79,12 +79,12 @@ func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]KubeDrift, error) {
 	return entries, nil
 }
 
-func (s *Store) GetDrifts(iter iterator.Iterator) ([]KubeDrift, []KubeDrift, error) {
-	var entries []KubeDrift
+func (s *Store) GetDrifts(iter iterator.Iterator) ([]Drift, []Drift, error) {
+	var entries []Drift
 	cnt := 0
 
 	for iter.Next() {
-		drift := KubeDrift{}
+		drift := Drift{}
 		json.Unmarshal(iter.Value(), &drift)
 		entries = append(entries, drift)
 		cnt++
@@ -99,7 +99,7 @@ func (s *Store) GetDrifts(iter iterator.Iterator) ([]KubeDrift, []KubeDrift, err
 	return entries, nil, nil
 }
 
-func (s *Store) SaveDrift(drift KubeDrift) error {
+func (s *Store) SaveDrift(drift Drift) error {
 	data, err := json.Marshal(drift)
 	if err != nil {
 		return err

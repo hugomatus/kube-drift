@@ -57,8 +57,8 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	fmt.Printf("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
-	kubedrift := provider.New(pod, "delete")
-	r.store.Save(*kubedrift)
+	drift := provider.New(pod, "delete")
+	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
 

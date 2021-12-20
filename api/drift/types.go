@@ -62,7 +62,7 @@ type ObjectMeta struct {
 	ClusterName                string                  `json:"clusterName,omitempty" protobuf:"bytes,15,opt,name=clusterName"`
 }
 
-type KubeDrift struct {
+type Drift struct {
 	key       string
 	Type      string      `json:"type"`
 	EventType string      `json:"eventType"`
@@ -71,7 +71,7 @@ type KubeDrift struct {
 	Event     interface{} `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
 }
 
-func (p *KubeDrift) SetKey() {
+func (p *Drift) SetKey() {
 
 	if p.MetaData.Namespace == "" {
 		p.MetaData.Namespace = "none"
@@ -82,15 +82,15 @@ func (p *KubeDrift) SetKey() {
 	p.key = key
 }
 
-func (p *KubeDrift) GetKey() string {
+func (p *Drift) GetKey() string {
 	if p.key == "" {
 		p.SetKey()
 	}
 	return p.key
 }
 
-func New(drift interface{}, eventType string) *KubeDrift {
-	p := &KubeDrift{}
+func New(drift interface{}, eventType string) *Drift {
+	p := &Drift{}
 	switch v := drift.(type) {
 	case v1.Pod:
 		klog.Infof("Processing type %T!\n", v)
@@ -113,7 +113,7 @@ func New(drift interface{}, eventType string) *KubeDrift {
 	return p
 }
 
-func (p *KubeDrift) newDeployment(eventType string, o *appsv1.Deployment) {
+func (p *Drift) newDeployment(eventType string, o *appsv1.Deployment) {
 	p.Type = "deployment"
 	p.EventType = eventType
 	p.MetaData = ObjectMeta{
@@ -136,7 +136,7 @@ func (p *KubeDrift) newDeployment(eventType string, o *appsv1.Deployment) {
 	p.SetKey()
 }
 
-func (p *KubeDrift) newEvent(eventType string, o *v1.Event) {
+func (p *Drift) newEvent(eventType string, o *v1.Event) {
 	p.Type = "event"
 	p.EventType = eventType
 	p.newEventDetails(o)
@@ -159,7 +159,7 @@ func (p *KubeDrift) newEvent(eventType string, o *v1.Event) {
 	p.SetKey()
 }
 
-func (p *KubeDrift) newEventDetails(o *v1.Event) {
+func (p *Drift) newEventDetails(o *v1.Event) {
 	p.Event = Event{
 		InvolvedObject:      o.InvolvedObject,
 		Reason:              o.Reason,
@@ -178,7 +178,7 @@ func (p *KubeDrift) newEventDetails(o *v1.Event) {
 	}
 }
 
-func (p *KubeDrift) newNode(eventType string, o *v1.Node) {
+func (p *Drift) newNode(eventType string, o *v1.Node) {
 	p.Type = "node"
 	p.EventType = eventType
 	p.MetaData = ObjectMeta{
@@ -201,7 +201,7 @@ func (p *KubeDrift) newNode(eventType string, o *v1.Node) {
 	p.SetKey()
 }
 
-func (p *KubeDrift) newPod(eventType string, o v1.Pod) {
+func (p *Drift) newPod(eventType string, o v1.Pod) {
 	p.Type = "pod"
 	p.EventType = eventType
 	p.MetaData = ObjectMeta{
@@ -224,7 +224,7 @@ func (p *KubeDrift) newPod(eventType string, o v1.Pod) {
 	p.SetKey()
 }
 
-func (p *KubeDrift) Marshal() string {
+func (p *Drift) Marshal() string {
 	j, err := json.Marshal(p)
 	if err != nil {
 		fmt.Println(err)
@@ -240,7 +240,7 @@ func Marshal(e v1.Event) string {
 	return string(j)
 }
 
-func (p *KubeDrift) Serialize() []byte {
+func (p *Drift) Serialize() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(p)
@@ -250,8 +250,8 @@ func (p *KubeDrift) Serialize() []byte {
 	return buf.Bytes()
 }
 
-func Deserialize(data []byte) KubeDrift {
-	obj := KubeDrift{}
+func Deserialize(data []byte) Drift {
+	obj := Drift{}
 	dec := gob.NewDecoder(bytes.NewReader(data))
 	err := dec.Decode(&obj)
 	if err != nil {
