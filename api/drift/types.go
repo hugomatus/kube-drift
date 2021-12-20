@@ -77,7 +77,6 @@ func (p *KubeDrift) New(drift interface{}) {
 	default:
 		fmt.Printf("I don't know about type %T!\n", v)
 	}
-
 }
 
 func (p *KubeDrift) GetDrift() interface{} {

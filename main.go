@@ -18,11 +18,6 @@ package main
 
 import (
 	"flag"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/hugomatus/kube-drift/api"
-	provider "github.com/hugomatus/kube-drift/api/drift"
-	"net/http"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -66,20 +61,19 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	go func() {
-		store := provider.Store{}
+	/*	store := provider.Store{}
 		store.New("/tmp/kube-drift")
+		go func() {
+			setupLog.Info("Start API Server::ListenAndServe on port 8001")
+			r := mux.NewRouter()
+			api.Manager(r, store)
+			// Bind to a port and pass our router in
+			err := http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
 
-		setupLog.Info("Start API Server::ListenAndServe on port 8001")
-		r := mux.NewRouter()
-		api.Manager(r, store)
-		// Bind to a port and pass our router in
-		err := http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
-
-		if err != nil {
-			setupLog.Error(err, "Error starting server")
-		}
-	}()
+			if err != nil {
+				setupLog.Error(err, "Error starting server")
+			}
+		}()*/
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
