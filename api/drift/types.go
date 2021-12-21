@@ -63,12 +63,12 @@ type ObjectMeta struct {
 }
 
 type Drift struct {
-	key       string
-	Type      string      `json:"type"`
-	EventType string      `json:"eventType"`
-	MetaData  ObjectMeta  `json:"metaData"`
-	Status    interface{} `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
-	Event     interface{} `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
+	key  string
+	Type string `json:"type"`
+	//EventType string      `json:"eventType"`
+	MetaData ObjectMeta  `json:"metaData"`
+	Status   interface{} `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	Event    interface{} `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
 }
 
 func (p *Drift) SetKey() {
@@ -78,7 +78,6 @@ func (p *Drift) SetKey() {
 	}
 
 	key := fmt.Sprintf("/%s/%s/%s/%s", p.Type, p.MetaData.Namespace, p.MetaData.Name, p.MetaData.UID)
-	klog.Infof("key: %s", key)
 	p.key = key
 }
 
@@ -96,26 +95,27 @@ func New(drift interface{}, eventType string) *Drift {
 		klog.Infof("Processing type %T!\n", v)
 		o := (drift).(v1.Pod)
 		p.newPod(eventType, o)
-	case *v1.Node:
-		o := (drift).(*v1.Node)
+	case v1.Node:
+		klog.Infof("Processing type %T!\n", v)
+		o := (drift).(v1.Node)
 		p.newNode(eventType, o)
-	case *v1.Event:
-		o := (drift).(*v1.Event)
+	case v1.Event:
+		klog.Infof("Processing type %T!\n", v)
+		o := (drift).(v1.Event)
 		p.newEvent(eventType, o)
-	case *appsv1.Deployment:
-		o := (drift).(*appsv1.Deployment)
+	case appsv1.Deployment:
+		klog.Infof("Processing type %T!\n", v)
+		o := (drift).(appsv1.Deployment)
 		p.newDeployment(eventType, o)
 	default:
 		klog.Infof("I don't know about type %T!\n", v)
 	}
-
-	klog.Infof("%+v", string(p.Marshal()))
 	return p
 }
 
-func (p *Drift) newDeployment(eventType string, o *appsv1.Deployment) {
+func (p *Drift) newDeployment(eventType string, o appsv1.Deployment) {
 	p.Type = "deployment"
-	p.EventType = eventType
+	//p.EventType = eventType
 	p.MetaData = ObjectMeta{
 		Name:                       o.ObjectMeta.Name,
 		GenerateName:               o.ObjectMeta.GenerateName,
@@ -136,9 +136,9 @@ func (p *Drift) newDeployment(eventType string, o *appsv1.Deployment) {
 	p.SetKey()
 }
 
-func (p *Drift) newEvent(eventType string, o *v1.Event) {
+func (p *Drift) newEvent(eventType string, o v1.Event) {
 	p.Type = "event"
-	p.EventType = eventType
+	//p.EventType = eventType
 	p.newEventDetails(o)
 	p.MetaData = ObjectMeta{
 		Name:                       o.ObjectMeta.Name,
@@ -159,7 +159,7 @@ func (p *Drift) newEvent(eventType string, o *v1.Event) {
 	p.SetKey()
 }
 
-func (p *Drift) newEventDetails(o *v1.Event) {
+func (p *Drift) newEventDetails(o v1.Event) {
 	p.Event = Event{
 		InvolvedObject:      o.InvolvedObject,
 		Reason:              o.Reason,
@@ -178,9 +178,9 @@ func (p *Drift) newEventDetails(o *v1.Event) {
 	}
 }
 
-func (p *Drift) newNode(eventType string, o *v1.Node) {
+func (p *Drift) newNode(eventType string, o v1.Node) {
 	p.Type = "node"
-	p.EventType = eventType
+	//p.EventType = eventType
 	p.MetaData = ObjectMeta{
 		Name:                       o.ObjectMeta.Name,
 		GenerateName:               o.ObjectMeta.GenerateName,
@@ -203,7 +203,7 @@ func (p *Drift) newNode(eventType string, o *v1.Node) {
 
 func (p *Drift) newPod(eventType string, o v1.Pod) {
 	p.Type = "pod"
-	p.EventType = eventType
+	//p.EventType = eventType
 	p.MetaData = ObjectMeta{
 		Name:                       o.ObjectMeta.Name,
 		GenerateName:               o.ObjectMeta.GenerateName,
