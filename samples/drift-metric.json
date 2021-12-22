@@ -1,0 +1,65 @@
+{
+  "container_info": [
+    {
+      "UID": "",
+      "Name": "kube-rbac-proxy",
+      "Image": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
+      "ImageID": "",
+      "ContainerID": "",
+      "ResourceInfo": [],
+      "Status": [
+        {
+          "Name": "kube-rbac-proxy",
+          "Value": "\u0026ContainerState{Waiting:nil,Running:\u0026ContainerStateRunning{StartedAt:2021-12-21 10:03:03 -0800 PST,},Terminated:nil,}"
+        },
+        {
+          "Name": "Ready",
+          "Value": "true"
+        },
+        {
+          "Name": "Restarts",
+          "Value": "0"
+        },
+        {
+          "Name": "Started",
+          "Value": "true"
+        }
+      ]
+    },
+    {
+      "UID": "",
+      "Name": "manager",
+      "Image": "hugomatus/kube-drift:v1alpha2",
+      "ImageID": "",
+      "ContainerID": "",
+      "ResourceInfo": [
+        {
+          "Name": "CPU",
+          "Value": "0.01"
+        },
+        {
+          "Name": "Memory",
+          "Value": "67108864.00"
+        }
+      ],
+      "Status": [
+        {
+          "Name": "manager",
+          "Value": "\u0026ContainerState{Waiting:nil,Running:\u0026ContainerStateRunning{StartedAt:2021-12-21 10:03:08 -0800 PST,},Terminated:nil,}"
+        },
+        {
+          "Name": "Ready",
+          "Value": "true"
+        },
+        {
+          "Name": "Restarts",
+          "Value": "0"
+        },
+        {
+          "Name": "Started",
+          "Value": "true"
+        }
+      ]
+    }
+  ]
+}

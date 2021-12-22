@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: hugomatus/kube-drift
-  newTag: v1alpha1
+  newTag: v1alpha2
