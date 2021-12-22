@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubectl.kubernetes.io/default-container: manager
+  creationTimestamp: "2021-12-21T18:03:02Z"
+  generateName: kube-drift-controller-manager-5d7444b85c-
+  labels:
+    control-plane: controller-manager
+    pod-template-hash: 5d7444b85c
+  name: kube-drift-controller-manager-5d7444b85c-dv44h
+  namespace: kube-drift-system
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: kube-drift-controller-manager-5d7444b85c
+    uid: a845721d-27a6-4f09-825b-ddece617f825
+  resourceVersion: "401216"
+  uid: be0de2a7-ff56-4ebf-9e92-b95895e253fe
+spec:
+  containers:
+  - args:
+    - --secure-listen-address=0.0.0.0:8443
+    - --upstream=http://127.0.0.1:8080/
+    - --logtostderr=true
+    - --v=10
+    image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+    imagePullPolicy: IfNotPresent
+    name: kube-rbac-proxy
+    ports:
+    - containerPort: 8443
+      name: https
+      protocol: TCP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-qqjmt
+      readOnly: true
+  - args:
+    - --health-probe-bind-address=:8081
+    - --metrics-bind-address=127.0.0.1:8080
+    - --leader-elect
+    command:
+    - /manager
+    image: hugomatus/kube-drift:v1alpha2
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /healthz
+        port: 8081
+        scheme: HTTP
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      successThreshold: 1
+      timeoutSeconds: 1
+    name: manager
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        path: /readyz
+        port: 8081
+        scheme: HTTP
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-qqjmt
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: minikube
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    runAsNonRoot: true
+  serviceAccount: kube-drift-controller-manager
+  serviceAccountName: kube-drift-controller-manager
+  terminationGracePeriodSeconds: 10
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-qqjmt
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2021-12-21T18:03:02Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2021-12-21T18:03:22Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2021-12-21T18:03:22Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2021-12-21T18:03:02Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://68a29868e33cd0fc1645adeb502573ac9354641a1f22b22a0352904e2703feb3
+    image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+    imageID: docker-pullable://gcr.io/kubebuilder/kube-rbac-proxy@sha256:db06cc4c084dd0253134f156dddaaf53ef1c3fb3cc809e5d81711baa4029ea4c
+    lastState: {}
+    name: kube-rbac-proxy
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2021-12-21T18:03:03Z"
+  - containerID: docker://fcc34b60e1fbf1acfa50317381357692092ad93efc2e57877bd873c6a2eb6c0a
+    image: hugomatus/kube-drift:v1alpha2
+    imageID: docker-pullable://hugomatus/kube-drift@sha256:1cf68b597d8eb4ce4a3704aba41e4edd40edfcc65e1454e8e14f865c04a0774b
+    lastState: {}
+    name: manager
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2021-12-21T18:03:08Z"
+  hostIP: 192.168.58.2
+  phase: Running
+  podIP: 172.17.0.8
+  podIPs:
+  - ip: 172.17.0.8
+  qosClass: Burstable
+  startTime: "2021-12-21T18:03:02Z"
