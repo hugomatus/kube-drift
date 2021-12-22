@@ -18,9 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
+	provider "github.com/hugomatus/kube-drift/api/drift"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -30,6 +31,7 @@ import (
 type NodeReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	store  *provider.Store
 }
 
 //+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;create;update;patch;delete
@@ -54,12 +56,15 @@ func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	fmt.Printf("Reconciling Node %s\n", node.Name)
+	klog.Infof("Reconciling Node %s\n", node.Name)
+	drift := provider.New(node, "")
+	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Store) error {
+	r.store = store
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Node{}).
 		Complete(r)

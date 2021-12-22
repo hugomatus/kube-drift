@@ -18,10 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	provider "github.com/hugomatus/kube-drift/api/drift"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -55,9 +55,8 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	if err := r.Get(ctx, req.NamespacedName, &pod); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	fmt.Printf("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
-
-	drift := provider.New(pod, "delete")
+	klog.Infof("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
+	drift := provider.New(pod, "")
 	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
