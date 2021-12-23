@@ -58,8 +58,6 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	klog.Infof("Reconciling Deployment %s/%s\n", deployment.Namespace, deployment.Name)
-	drift := provider.New(deployment, "")
-	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
 

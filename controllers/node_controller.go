@@ -57,8 +57,6 @@ func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 
 	klog.Infof("Reconciling Node %s\n", node.Name)
-	drift := provider.New(node, "")
-	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
 

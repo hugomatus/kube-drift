@@ -33,25 +33,18 @@ func (s *Store) Close() {
 	s.db.Close()
 }
 
-func (s *Store) Save(drift Drift) error {
-	drift.SetKey() //fmt.Sprintf("%s/%s/%s", event, p.Namespace, p.UID)
-	data, err := json.Marshal(drift)
-
-	if err != nil {
-		return err
-	}
-
-	err = s.db.Put([]byte(drift.GetKey()), data, nil)
+func (s *Store) Save(key string, data []byte) error {
+	err := s.db.Put([]byte(key), data, nil)
 	if err != nil {
 		klog.Error(err)
 	}
-	klog.Infof("saved drift: %s", drift.GetKey())
+	klog.Infof("saved drift: %s", key)
 	return nil
 }
 
-func (s *Store) GetDriftByKey(key string) (Drift, error) {
+func (s *Store) GetDriftByKey(key string) (PodDrift, error) {
 
-	drift := Drift{}
+	drift := PodDrift{}
 
 	data, err := s.db.Get([]byte(key), nil)
 	if err != nil {
@@ -64,27 +57,27 @@ func (s *Store) GetDriftByKey(key string) (Drift, error) {
 	return drift, nil
 }
 
-func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]Drift, error) {
+func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]PodDrift, error) {
 	klog.Infof("get drift by key prefix: %s", keyPrefix)
 	var iter iterator.Iterator
 	//iter = c.db.NewIterator(nil, nil)
 	iter = s.db.NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
 
-	entries, drifts, err := s.GetDrifts(iter)
+	drifts, err := s.GetDrifts(iter)
 	if err != nil {
 		klog.Errorf("error getting drift: %s", err)
 		return drifts, err
 	}
 
-	return entries, nil
+	return drifts, nil
 }
 
-func (s *Store) GetDrifts(iter iterator.Iterator) ([]Drift, []Drift, error) {
-	var entries []Drift
+func (s *Store) GetDrifts(iter iterator.Iterator) ([]PodDrift, error) {
+	var entries []PodDrift
 	cnt := 0
 
 	for iter.Next() {
-		drift := Drift{}
+		drift := PodDrift{}
 		json.Unmarshal(iter.Value(), &drift)
 		entries = append(entries, drift)
 		cnt++
@@ -94,19 +87,7 @@ func (s *Store) GetDrifts(iter iterator.Iterator) ([]Drift, []Drift, error) {
 	iter.Release()
 	err := iter.Error()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return entries, nil, nil
-}
-
-func (s *Store) SaveDrift(drift Drift) error {
-	data, err := json.Marshal(drift)
-	if err != nil {
-		return err
-	}
-	err = s.db.Put([]byte(drift.GetKey()), data, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	return entries, nil
 }

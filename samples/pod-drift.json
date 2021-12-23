@@ -1,7 +1,5 @@
 {
-  "Name": "kube-drift-controller-manager-5d7444b85c-dv44h",
-  "Namespace": "kube-drift-system",
-  "PodInfo": {
+  "pod_info": {
     "created_by_kind": "ReplicaSet",
     "created_by_name": "kube-drift-controller-manager-5d7444b85c",
     "host_ip": "192.168.58.2",
@@ -14,11 +12,18 @@
     "qos_class": "Burstable",
     "uid": "be0de2a7-ff56-4ebf-9e92-b95895e253fe"
   },
-  "PodConditions": {
+  "pod_labels": {
+    "control-plane": "controller-manager",
+    "pod-template-hash": "5d7444b85c"
+  },
+  "pod_annotations": {
+    "kubectl.kubernetes.io/default-container": "manager"
+  },
+  "pod_conditions": {
     "condition": "PodScheduled",
     "status": "True"
   },
-  "PodContainers": [
+  "pod_containers": [
     {
       "container_id": "docker://68a29868e33cd0fc1645adeb502573ac9354641a1f22b22a0352904e2703feb3",
       "container_image": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
@@ -40,18 +45,19 @@
       "container_state": "running"
     }
   ],
-  "ResourceList": [
-    {
-      "container_name": "manager",
-      "node_name": "minikube",
-      "resource_name": "cpu",
-      "resource_value": "500m"
-    },
+  "resource_list": [
     {
       "container_name": "manager",
       "node_name": "minikube",
       "resource_name": "memory",
       "resource_value": "128Mi"
+    },
+    {
+      "container_name": "manager",
+      "node_name": "minikube",
+      "resource_name": "cpu",
+      "resource_value": "500m"
     }
-  ]
+  ],
+  "pod_volumes": []
 }

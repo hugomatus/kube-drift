@@ -11,16 +11,35 @@ import (
 
 type DriftMetric map[string]string
 
-type DriftPod struct {
-	Name          string
-	Namespace     string
-	PodInfo       DriftMetric
-	PodConditions DriftMetric
-	PodContainers []*DriftMetric
-	ResourceList  []*DriftMetric
+type PodDrift struct {
+	Key             string         `json:"key"`
+	PodInfo         DriftMetric    `json:"pod_info"`
+	PodLabels       DriftMetric    `json:"pod_labels"`
+	PodAnnotations  DriftMetric    `json:"pod_annotations"`
+	PodConditions   DriftMetric    `json:"pod_conditions"`
+	PodContainers   []*DriftMetric `json:"pod_containers"`
+	PodResourceList []*DriftMetric `json:"resource_list"`
+	PodVolumes      []*DriftMetric `json:"pod_volumes"`
 }
 
+// GetPodVolumes returns the PersistentVolumeClaim(s) of the pod
+func GetPodVolumes(p *v1.Pod) []*DriftMetric {
+	for _, v := range p.Spec.Volumes {
+		if v.VolumeSource.PersistentVolumeClaim != nil {
+			return []*DriftMetric{
+				{
+					"vol_name":       v.Name,
+					"vol_claim_name": v.VolumeSource.PersistentVolumeClaim.ClaimName,
+				},
+			}
+		}
+	}
+	return []*DriftMetric{}
+}
+
+// GetPodInfo returns the pod info
 func GetPodInfo(p *v1.Pod) *DriftMetric {
+	dm := &DriftMetric{}
 	createdBy := metav1.GetControllerOf(p)
 	createdByKind := "none"
 	createdByName := "none"
@@ -33,7 +52,8 @@ func GetPodInfo(p *v1.Pod) *DriftMetric {
 		}
 	}
 
-	dm := &DriftMetric{
+	dm = &DriftMetric{
+		"key":             fmt.Sprintf("/%s/%s/%s/%s", "pod", p.Namespace, p.Name, p.UID),
 		"uid":             string(p.UID),
 		"name":            p.Name,
 		"namespace":       p.Namespace,
@@ -50,14 +70,25 @@ func GetPodInfo(p *v1.Pod) *DriftMetric {
 	return dm
 }
 
-func (d *DriftPod) Marshal() string {
-	j, err := json.Marshal(d)
-	if err != nil {
-		fmt.Println(err)
+// GetPodLabels returns the pod labels
+func GetPodLabels(p *v1.Pod) *DriftMetric {
+	dm := DriftMetric{}
+	for k, v := range p.Labels {
+		dm[k] = v
 	}
-	return string(j)
+	return &dm
 }
 
+// GetPodAnnotations returns the pod annotations
+func GetPodAnnotations(p *v1.Pod) *DriftMetric {
+	dm := DriftMetric{}
+	for k, v := range p.Annotations {
+		dm[k] = v
+	}
+	return &dm
+}
+
+// GetPodConditions returns the pod conditions
 func GetPodConditions(p *v1.Pod) *DriftMetric {
 	dm := &DriftMetric{}
 
@@ -72,6 +103,7 @@ func GetPodConditions(p *v1.Pod) *DriftMetric {
 	return dm
 }
 
+// GetContainerStatus returns the container status
 func GetContainerStatus(p *v1.Pod) []*DriftMetric {
 	dm := []*DriftMetric{}
 
@@ -106,6 +138,7 @@ func GetContainerStatus(p *v1.Pod) []*DriftMetric {
 	return dm
 }
 
+// GetContainers returns the pod containers
 func GetContainers(p *v1.Pod) []*DriftMetric {
 	dm := []*DriftMetric{}
 	for _, cs := range p.Status.ContainerStatuses {
@@ -114,7 +147,7 @@ func GetContainers(p *v1.Pod) []*DriftMetric {
 			"container_image":         cs.Image,
 			"container_image_spec":    cs.ImageID,
 			"container_id":            cs.ContainerID,
-			"container_state":         string(cs.State.Waiting.Reason),
+			"container_state":         cs.State.Waiting.Reason,
 			"container_ready":         strconv.FormatBool(cs.Ready),
 			"container_restart_count": strconv.FormatInt(int64(cs.RestartCount), 10),
 		})
@@ -122,6 +155,7 @@ func GetContainers(p *v1.Pod) []*DriftMetric {
 	return dm
 }
 
+// GetResourceList returns the pod resource list
 func GetResourceList(p *v1.Pod) []*DriftMetric {
 	dm := []*DriftMetric{}
 
@@ -156,32 +190,11 @@ func getResources(p *v1.Pod, resourceName v1.ResourceName, dm []*DriftMetric, c 
 	return dm
 }
 
-func GetResourceRequests(p *v1.Pod) []*DriftMetric {
-	dm := []*DriftMetric{}
-	for _, c := range p.Spec.Containers {
-		requests := c.Resources.Requests
-		dm = append(dm, getResourceList(requests)...)
+// Marshal PodDrift to json
+func (d *PodDrift) Marshal() []byte {
+	j, err := json.Marshal(d)
+	if err != nil {
+		fmt.Println(err)
 	}
-	return dm
-}
-
-func getResourceList(resourceList v1.ResourceList) []*DriftMetric {
-	var dm []*DriftMetric
-	for resourceName, val := range resourceList {
-		switch resourceName {
-		case v1.ResourceCPU:
-			dm = append(dm, &DriftMetric{
-				"resource_name":  string(resourceName),
-				"resource_value": val.String(), //float64(val.MilliValue()) / 1000
-			})
-		case v1.ResourceMemory:
-			dm = append(dm, &DriftMetric{
-				"resource_name":  string(resourceName),
-				"resource_value": val.String(),
-			})
-		default:
-
-		}
-	}
-	return dm
+	return j
 }

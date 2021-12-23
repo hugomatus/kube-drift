@@ -56,8 +56,6 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	klog.Infof("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
-	drift := provider.New(event, "")
-	r.store.Save(*drift)
 	return ctrl.Result{}, nil
 }
 

@@ -57,23 +57,28 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	klog.Infof("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
-	drift := provider.New(pod, "")
 	info := provider.GetPodInfo(&pod)
 	cond := provider.GetPodConditions(&pod)
 	status := provider.GetContainerStatus(&pod)
 	resourceList := provider.GetResourceList(&pod)
+	labels := provider.GetPodLabels(&pod)
+	annotations := provider.GetPodAnnotations(&pod)
+	vols := provider.GetPodVolumes(&pod)
 
-	d := &provider.DriftPod{
-		Name:          pod.Name,
-		Namespace:     pod.Namespace,
-		PodInfo:       *info,
-		PodConditions: *cond,
-		PodContainers: status,
-		ResourceList:  resourceList,
+	d := &provider.PodDrift{
+		PodInfo:         *info,
+		PodConditions:   *cond,
+		PodContainers:   status,
+		PodResourceList: resourceList,
+		PodLabels:       *labels,
+		PodAnnotations:  *annotations,
+		PodVolumes:      vols,
 	}
 
-	klog.Infof((d.Marshal()))
-	r.store.Save(*drift)
+	d.Key = d.PodInfo["key"]
+	klog.Infof(string(d.Marshal()))
+
+	r.store.Save(d.Key, d.Marshal())
 	return ctrl.Result{}, nil
 }
 
