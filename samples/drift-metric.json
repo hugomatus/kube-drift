@@ -1,65 +1,36 @@
 {
+  "uid": "bcf65e26-50cf-41a9-a109-3428eef8853b",
+  "phase": "Running",
+  "name": "kubernetes-dashboard-654cf69797-kw7dm",
+  "kind": "Pod",
+  "namespace": "kubernetes-dashboard",
+  "resource_version": "295380",
+  "qos_class": "BestEffort",
+  "node_name": "minikube",
+  "host_ip": "192.168.58.2",
+  "ip": "172.17.0.4",
+  "labels": {
+    "gcp-auth-skip-secret": "true",
+    "k8s-app": "kubernetes-dashboard",
+    "pod-template-hash": "654cf69797"
+  },
+  "annotations": null,
   "container_info": [
     {
-      "UID": "",
-      "Name": "kube-rbac-proxy",
-      "Image": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
-      "ImageID": "",
-      "ContainerID": "",
-      "ResourceInfo": [],
-      "Status": [
-        {
-          "Name": "kube-rbac-proxy",
-          "Value": "\u0026ContainerState{Waiting:nil,Running:\u0026ContainerStateRunning{StartedAt:2021-12-21 10:03:03 -0800 PST,},Terminated:nil,}"
-        },
-        {
-          "Name": "Ready",
-          "Value": "true"
-        },
-        {
-          "Name": "Restarts",
-          "Value": "0"
-        },
-        {
-          "Name": "Started",
-          "Value": "true"
-        }
-      ]
-    },
-    {
-      "UID": "",
-      "Name": "manager",
-      "Image": "hugomatus/kube-drift:v1alpha2",
-      "ImageID": "",
-      "ContainerID": "",
-      "ResourceInfo": [
-        {
-          "Name": "CPU",
-          "Value": "0.01"
-        },
-        {
-          "Name": "Memory",
-          "Value": "67108864.00"
-        }
-      ],
-      "Status": [
-        {
-          "Name": "manager",
-          "Value": "\u0026ContainerState{Waiting:nil,Running:\u0026ContainerStateRunning{StartedAt:2021-12-21 10:03:08 -0800 PST,},Terminated:nil,}"
-        },
-        {
-          "Name": "Ready",
-          "Value": "true"
-        },
-        {
-          "Name": "Restarts",
-          "Value": "0"
-        },
-        {
-          "Name": "Started",
-          "Value": "true"
-        }
-      ]
+      "Image": "kubernetesui/dashboard:v2.3.1@sha256:ec27f462cf1946220f5a9ace416a84a57c18f98c777876a8054405d1428cc92e",
+      "status": {}
     }
+  ],
+  "conditions": [
+    [
+      {
+        "name": "Status",
+        "value": "True"
+      },
+      {
+        "name": "Type",
+        "value": "PodScheduled"
+      }
+    ]
   ]
 }

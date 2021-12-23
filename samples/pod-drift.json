@@ -1,68 +1,57 @@
 {
-  "uid": "e0adc0c9-e19d-4316-81e5-8086adeaafc6",
-  "phase": "Running",
-  "name": "kube-scheduler-minikube",
-  "kind": "Pod",
-  "namespace": "kube-system",
-  "resource_version": "295301",
-  "qos_class": "Burstable",
-  "node_name": "minikube",
-  "host_ip": "192.168.58.2",
-  "ip": "192.168.58.2",
-  "labels": {
-    "component": "kube-scheduler",
-    "tier": "control-plane"
+  "Name": "kube-drift-controller-manager-5d7444b85c-dv44h",
+  "Namespace": "kube-drift-system",
+  "PodInfo": {
+    "created_by_kind": "ReplicaSet",
+    "created_by_name": "kube-drift-controller-manager-5d7444b85c",
+    "host_ip": "192.168.58.2",
+    "name": "kube-drift-controller-manager-5d7444b85c-dv44h",
+    "namespace": "kube-drift-system",
+    "node_name": "minikube",
+    "phase": "Running",
+    "pod_ip": "172.17.0.8",
+    "priority": "0",
+    "qos_class": "Burstable",
+    "uid": "be0de2a7-ff56-4ebf-9e92-b95895e253fe"
   },
-  "annotations": {
-    "kubernetes.io/config.hash": "eee9e2da42102bf0a05e1e7b00e318bf",
-    "kubernetes.io/config.mirror": "eee9e2da42102bf0a05e1e7b00e318bf",
-    "kubernetes.io/config.seen": "2021-12-15T03:40:38.205534988Z",
-    "kubernetes.io/config.source": "file",
-    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default"
+  "PodConditions": {
+    "condition": "PodScheduled",
+    "status": "True"
   },
-  "container_info": [
+  "PodContainers": [
     {
-      "Image": "k8s.gcr.io/kube-scheduler:v1.22.3",
-      "status": {
-        "info": [
-          {
-            "name": "Ready",
-            "value": "true"
-          },
-          {
-            "name": "RestartCount",
-            "value": "2"
-          },
-          {
-            "name": "Started",
-            "value": "true"
-          }
-        ],
-        "state": [
-          {
-            "name": "Running",
-            "value": "true"
-          }
-        ]
-      },
-      "resource_request": [
-        {
-          "name": "cpu",
-          "value": "1"
-        }
-      ]
+      "container_id": "docker://68a29868e33cd0fc1645adeb502573ac9354641a1f22b22a0352904e2703feb3",
+      "container_image": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
+      "container_image_id": "docker-pullable://gcr.io/kubebuilder/kube-rbac-proxy@sha256:db06cc4c084dd0253134f156dddaaf53ef1c3fb3cc809e5d81711baa4029ea4c",
+      "container_image_spec": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
+      "container_name": "kube-rbac-proxy",
+      "container_ready": "true",
+      "container_restart_count": "0",
+      "container_state": "running"
+    },
+    {
+      "container_id": "docker://fcc34b60e1fbf1acfa50317381357692092ad93efc2e57877bd873c6a2eb6c0a",
+      "container_image": "hugomatus/kube-drift:v1alpha2",
+      "container_image_id": "docker-pullable://hugomatus/kube-drift@sha256:1cf68b597d8eb4ce4a3704aba41e4edd40edfcc65e1454e8e14f865c04a0774b",
+      "container_image_spec": "hugomatus/kube-drift:v1alpha2",
+      "container_name": "manager",
+      "container_ready": "true",
+      "container_restart_count": "0",
+      "container_state": "running"
     }
   ],
-  "conditions": [
-    [
-      {
-        "name": "Status",
-        "value": "True"
-      },
-      {
-        "name": "Type",
-        "value": "PodScheduled"
-      }
-    ]
+  "ResourceList": [
+    {
+      "container_name": "manager",
+      "node_name": "minikube",
+      "resource_name": "cpu",
+      "resource_value": "500m"
+    },
+    {
+      "container_name": "manager",
+      "node_name": "minikube",
+      "resource_name": "memory",
+      "resource_value": "128Mi"
+    }
   ]
 }

@@ -80,14 +80,14 @@ type Drift struct {
 	key  string
 	Type string `json:"type"`
 	//EventType string      `json:"eventType"`
-	MetaData                 ObjectMeta                `json:"metaData"`
-	Status                   interface{}               `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
-	ResourceRequirement      []v1.ResourceRequirements `json:"resourceRequest,omitempty" protobuf:"bytes,4,opt,name=resourceRequest"`
-	SpecContainers           []v1.Container            `json:"specContainers,omitempty" protobuf:"bytes,5,opt,name=specContainers"`
-	Event                    interface{}               `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
-	ContainerInfo            []*Container              `json:"containerInfo,omitempty" protobuf:"bytes,3,opt,name=event"`
-	ContainerStatus          []*InfoBit                `json:"containerStatus,omitempty" protobuf:"bytes,3,opt,name=event"`
-	ContainerResourceRequest []*InfoBit                `json:"containerResources,omitempty" protobuf:"bytes,3,opt,name=event"`
+	MetaData ObjectMeta  `json:"metaData"`
+	Status   interface{} `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
+	//ResourceRequirement      []v1.ResourceRequirements `json:"resourceRequest,omitempty" protobuf:"bytes,4,opt,name=resourceRequest"`
+	//SpecContainers           []v1.Container            `json:"specContainers,omitempty" protobuf:"bytes,5,opt,name=specContainers"`
+	Event interface{} `json:"event,omitempty" protobuf:"bytes,3,opt,name=event"`
+	/*ContainerInfo            []*Container `json:"containerInfo,omitempty" protobuf:"bytes,3,opt,name=event"`
+	ContainerStatus          []*InfoBit   `json:"containerStatus,omitempty" protobuf:"bytes,3,opt,name=event"`
+	ContainerResourceRequest []*InfoBit   `json:"containerResources,omitempty" protobuf:"bytes,3,opt,name=event"`*/
 }
 
 func (p *Drift) SetKey() {
@@ -241,14 +241,14 @@ func (p *Drift) newPod(eventType string, o v1.Pod) {
 	}
 	p.Status = o.Status
 
-	rq := make([]v1.Container, len(o.Spec.Containers))
+	/*rq := make([]v1.Container, len(o.Spec.Containers))
 
 	for _, c := range o.Spec.Containers {
 
 		rq = append(rq, c)
 	}
 
-	p.SpecContainers = rq
+	p.SpecContainers = rq*/
 	p.SetKey()
 }
 
