@@ -60,19 +60,21 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	info := provider.GetPodInfo(&pod)
 	cond := provider.GetPodConditions(&pod)
 	status := provider.GetContainerStatus(&pod)
-	resourceList := provider.GetResourceList(&pod)
+	resourceRequest := provider.GetResourceRequests(&pod)
+	resourceLimit := provider.GetResourceLimits(&pod)
 	labels := provider.GetPodLabels(&pod)
 	annotations := provider.GetPodAnnotations(&pod)
 	vols := provider.GetPodVolumes(&pod)
 
 	d := &provider.PodDrift{
-		PodInfo:         *info,
-		PodConditions:   *cond,
-		PodContainers:   status,
-		PodResourceList: resourceList,
-		PodLabels:       *labels,
-		PodAnnotations:  *annotations,
-		PodVolumes:      vols,
+		PodInfo:             *info,
+		PodConditions:       *cond,
+		PodContainers:       status,
+		PodResourceRequests: resourceRequest,
+		PodResourceLimits:   resourceLimit,
+		PodLabels:           *labels,
+		PodAnnotations:      *annotations,
+		PodVolumes:          vols,
 	}
 
 	d.Key = d.PodInfo["key"]

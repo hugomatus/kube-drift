@@ -12,14 +12,15 @@ import (
 type DriftMetric map[string]string
 
 type PodDrift struct {
-	Key             string         `json:"key"`
-	PodInfo         DriftMetric    `json:"pod_info"`
-	PodLabels       DriftMetric    `json:"pod_labels"`
-	PodAnnotations  DriftMetric    `json:"pod_annotations"`
-	PodConditions   DriftMetric    `json:"pod_conditions"`
-	PodContainers   []*DriftMetric `json:"pod_containers"`
-	PodResourceList []*DriftMetric `json:"resource_list"`
-	PodVolumes      []*DriftMetric `json:"pod_volumes"`
+	Key                 string         `json:"key"`
+	PodInfo             DriftMetric    `json:"pod_info"`
+	PodLabels           DriftMetric    `json:"pod_labels"`
+	PodAnnotations      DriftMetric    `json:"pod_annotations"`
+	PodConditions       DriftMetric    `json:"pod_conditions"`
+	PodContainers       []*DriftMetric `json:"pod_containers"`
+	PodResourceRequests []*DriftMetric `json:"resource_requests"`
+	PodResourceLimits   []*DriftMetric `json:"resource_limits"`
+	PodVolumes          []*DriftMetric `json:"pod_volumes"`
 }
 
 // GetPodVolumes returns the PersistentVolumeClaim(s) of the pod
@@ -155,12 +156,22 @@ func GetContainers(p *v1.Pod) []*DriftMetric {
 	return dm
 }
 
-// GetResourceList returns the pod resource list
-func GetResourceList(p *v1.Pod) []*DriftMetric {
+// GetResourceLimits returns the pod resource list
+func GetResourceLimits(p *v1.Pod) []*DriftMetric {
 	dm := []*DriftMetric{}
-
 	for _, c := range p.Spec.Containers {
 		resourceList := c.Resources.Limits
+		for resourceName, val := range resourceList {
+			dm = getResources(p, resourceName, dm, c, val)
+		}
+	}
+	return dm
+}
+
+func GetResourceRequests(p *v1.Pod) []*DriftMetric {
+	dm := []*DriftMetric{}
+	for _, c := range p.Spec.Containers {
+		resourceList := c.Resources.Requests
 		for resourceName, val := range resourceList {
 			dm = getResources(p, resourceName, dm, c, val)
 		}

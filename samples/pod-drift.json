@@ -1,20 +1,22 @@
 {
+  "key": "/pod/kube-drift-system/kube-drift-controller-manager-65d5b54956-nh576/67e8b020-9465-41df-8344-b5d7d25e6f4f",
   "pod_info": {
     "created_by_kind": "ReplicaSet",
-    "created_by_name": "kube-drift-controller-manager-5d7444b85c",
+    "created_by_name": "kube-drift-controller-manager-65d5b54956",
     "host_ip": "192.168.58.2",
-    "name": "kube-drift-controller-manager-5d7444b85c-dv44h",
+    "key": "/pod/kube-drift-system/kube-drift-controller-manager-65d5b54956-nh576/67e8b020-9465-41df-8344-b5d7d25e6f4f",
+    "name": "kube-drift-controller-manager-65d5b54956-nh576",
     "namespace": "kube-drift-system",
     "node_name": "minikube",
     "phase": "Running",
     "pod_ip": "172.17.0.8",
     "priority": "0",
     "qos_class": "Burstable",
-    "uid": "be0de2a7-ff56-4ebf-9e92-b95895e253fe"
+    "uid": "67e8b020-9465-41df-8344-b5d7d25e6f4f"
   },
   "pod_labels": {
     "control-plane": "controller-manager",
-    "pod-template-hash": "5d7444b85c"
+    "pod-template-hash": "65d5b54956"
   },
   "pod_annotations": {
     "kubectl.kubernetes.io/default-container": "manager"
@@ -25,7 +27,7 @@
   },
   "pod_containers": [
     {
-      "container_id": "docker://68a29868e33cd0fc1645adeb502573ac9354641a1f22b22a0352904e2703feb3",
+      "container_id": "docker://d5df26acb55f7c432b33cf0a907b2f7184a6bcbbb68b7487fc63f83999856f17",
       "container_image": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
       "container_image_id": "docker-pullable://gcr.io/kubebuilder/kube-rbac-proxy@sha256:db06cc4c084dd0253134f156dddaaf53ef1c3fb3cc809e5d81711baa4029ea4c",
       "container_image_spec": "gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0",
@@ -35,17 +37,31 @@
       "container_state": "running"
     },
     {
-      "container_id": "docker://fcc34b60e1fbf1acfa50317381357692092ad93efc2e57877bd873c6a2eb6c0a",
-      "container_image": "hugomatus/kube-drift:v1alpha2",
-      "container_image_id": "docker-pullable://hugomatus/kube-drift@sha256:1cf68b597d8eb4ce4a3704aba41e4edd40edfcc65e1454e8e14f865c04a0774b",
-      "container_image_spec": "hugomatus/kube-drift:v1alpha2",
+      "container_id": "docker://2f6044829cd719d68e7e47ef00f8aeeec8f16a5b44d0c83c029f15e28021aaa2",
+      "container_image": "hugomatus/kube-drift:v1alpha3",
+      "container_image_id": "docker-pullable://hugomatus/kube-drift@sha256:66c68def4f0735e31f9b57e03d5607d2b60d655dcdd35df81ab674fd4765062b",
+      "container_image_spec": "hugomatus/kube-drift:v1alpha3",
       "container_name": "manager",
       "container_ready": "true",
       "container_restart_count": "0",
       "container_state": "running"
     }
   ],
-  "resource_list": [
+  "resource_requests": [
+    {
+      "container_name": "manager",
+      "node_name": "minikube",
+      "resource_name": "cpu",
+      "resource_value": "10m"
+    },
+    {
+      "container_name": "manager",
+      "node_name": "minikube",
+      "resource_name": "memory",
+      "resource_value": "64Mi"
+    }
+  ],
+  "resource_limits": [
     {
       "container_name": "manager",
       "node_name": "minikube",
