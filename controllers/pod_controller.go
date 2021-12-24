@@ -57,38 +57,23 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	klog.Infof("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
-	drift := r.NewPodDrift(pod)
-
-	err := r.store.Save(drift.Key, drift.Marshal())
+	err := r.HandleProcessing(pod)
 	if err != nil {
-		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key,err)
+		return ctrl.Result{}, err
 	}
+
 	return ctrl.Result{}, nil
 }
 
-func (r *PodReconciler) NewPodDrift(pod corev1.Pod) *provider.PodDrift {
-	info := provider.GetPodInfo(&pod)
-	cond := provider.GetPodConditions(&pod)
-	status := provider.GetContainerStatus(&pod)
-	resourceRequest := provider.GetResourceRequests(&pod)
-	resourceLimit := provider.GetResourceLimits(&pod)
-	labels := provider.GetPodLabels(&pod)
-	annotations := provider.GetPodAnnotations(&pod)
-	vols := provider.GetPodVolumes(&pod)
-
-	d := &provider.PodDrift{
-		PodInfo:             *info,
-		PodConditions:       *cond,
-		PodContainers:       status,
-		PodResourceRequests: resourceRequest,
-		PodResourceLimits:   resourceLimit,
-		PodLabels:           *labels,
-		PodAnnotations:      *annotations,
-		PodVolumes:          vols,
+func (r *PodReconciler) HandleProcessing(pod corev1.Pod) error {
+	drift := &provider.PodDrift{}
+	drift.NewKubeDrift(pod)
+	err := r.store.Save(drift.Key, drift.Marshal())
+	if err != nil {
+		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
+		return err
 	}
-
-	d.Key = d.PodInfo["key"]
-	return d
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

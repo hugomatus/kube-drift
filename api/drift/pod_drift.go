@@ -9,6 +9,10 @@ import (
 	"strconv"
 )
 
+type KubeDrift interface {
+	NewKubeDrift(obj interface{}) KubeDrift
+}
+
 type DriftMetric map[string]string
 
 type PodDrift struct {
@@ -21,6 +25,33 @@ type PodDrift struct {
 	PodResourceRequests []*DriftMetric `json:"resource_requests"`
 	PodResourceLimits   []*DriftMetric `json:"resource_limits"`
 	PodVolumes          []*DriftMetric `json:"pod_volumes"`
+}
+
+func (r *PodDrift) NewKubeDrift(obj interface{}) KubeDrift {
+	pod := obj.(v1.Pod)
+	info := GetPodInfo(&pod)
+	cond := GetPodConditions(&pod)
+	status := GetContainerStatus(&pod)
+	resourceRequest := GetResourceRequests(&pod)
+	resourceLimit := GetResourceLimits(&pod)
+	labels := GetPodLabels(&pod)
+	annotations := GetPodAnnotations(&pod)
+	vols := GetPodVolumes(&pod)
+
+	d := &PodDrift{
+		PodInfo:             *info,
+		PodConditions:       *cond,
+		PodContainers:       status,
+		PodResourceRequests: resourceRequest,
+		PodResourceLimits:   resourceLimit,
+		PodLabels:           *labels,
+		PodAnnotations:      *annotations,
+		PodVolumes:          vols,
+	}
+
+	d.Key = d.PodInfo["key"]
+
+	return KubeDrift(d)
 }
 
 // GetPodVolumes returns the PersistentVolumeClaim(s) of the pod

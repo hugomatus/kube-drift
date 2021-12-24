@@ -57,14 +57,24 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 	klog.Infof("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
 
-	drift := r.NewEventDrift(event)
-
-	err := r.store.Save(drift.Key, drift.Marshal())
+	err := r.HandleProcessing(event)
 	if err != nil {
-		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key,err)
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *EventReconciler) HandleProcessing(pod corev1.Event) error {
+	drift := &provider.EventDrift{}
+	drift.NewKubeDrift(pod)
+
+	err := r.store.Save(drift.Key, drift.Marshal())
+	if err != nil {
+		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
+		return err
+	}
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -73,17 +83,4 @@ func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Sto
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Event{}).
 		Complete(r)
-}
-
-func (r *EventReconciler) NewEventDrift(event corev1.Event) *provider.EventDrift {
-	info := provider.GetEventInfo(&event)
-	o := provider.GetInvolvedObject(&event)
-
-	d := &provider.EventDrift{
-		EventInfo:      *info,
-		InvolvedObject: *o,
-	}
-
-	d.Key = d.EventInfo["key"]
-	return d
 }

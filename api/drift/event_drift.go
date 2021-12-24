@@ -16,6 +16,21 @@ type EventDrift struct {
 
 type InvolvedObject *DriftMetric
 
+func (r *EventDrift) NewKubeDrift(obj interface{}) KubeDrift {
+
+	event := obj.(v1.Event)
+	info := GetEventInfo(&event)
+	o := GetInvolvedObject(&event)
+
+	d := &EventDrift{
+		EventInfo:      *info,
+		InvolvedObject: *o,
+	}
+
+	d.Key = d.EventInfo["key"]
+	return KubeDrift(d)
+}
+
 func GetEventInfo(e *v1.Event) *DriftMetric {
 
 	dm := &DriftMetric{}
