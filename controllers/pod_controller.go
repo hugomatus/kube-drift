@@ -57,6 +57,13 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	klog.Infof("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
+	d := r.NewPodDrift(pod)
+
+	r.store.Save(d.Key, d.Marshal())
+	return ctrl.Result{}, nil
+}
+
+func (r *PodReconciler) NewPodDrift(pod corev1.Pod) *provider.PodDrift {
 	info := provider.GetPodInfo(&pod)
 	cond := provider.GetPodConditions(&pod)
 	status := provider.GetContainerStatus(&pod)
@@ -78,10 +85,7 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 
 	d.Key = d.PodInfo["key"]
-	klog.Infof(string(d.Marshal()))
-
-	r.store.Save(d.Key, d.Marshal())
-	return ctrl.Result{}, nil
+	return d
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -56,6 +56,11 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	klog.Infof("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
+
+	ed := r.NewEventDrift(&event)
+
+	r.store.Save(ed.Key, ed.Marshal())
+
 	return ctrl.Result{}, nil
 }
 
@@ -65,4 +70,17 @@ func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Sto
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Event{}).
 		Complete(r)
+}
+
+func (r *EventReconciler) NewEventDrift(event *corev1.Event) *provider.EventDrift {
+	info := provider.GetEventInfo(event)
+	o := provider.GetInvolvedObject(event)
+
+	d := &provider.EventDrift{
+		EventInfo:      *info,
+		InvolvedObject: *o,
+	}
+
+	d.Key = d.EventInfo["key"]
+	return d
 }

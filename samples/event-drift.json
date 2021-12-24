@@ -1,48 +1,28 @@
 {
-  "kind": "Event",
-  "apiVersion": "v1",
-  "metadata": {
-    "name": "hello-7db79cdc77-gmp89.16c1fc40b3dab7d8",
+  "Key": "/event/default/hello-7db79cdc77-hsst2.16c28ea49130fe10/ceead790-59ac-45c4-83e9-0a5c39797d0c",
+  "EventInfo": {
+    "action": "Scheduling",
+    "count": "0",
+    "creation_timestamp": "2021-12-20T11:54:11-08:00",
+    "event_time": "2021-12-20T11:54:11-08:00",
+    "key": "/event/default/hello-7db79cdc77-hsst2.16c28ea49130fe10/ceead790-59ac-45c4-83e9-0a5c39797d0c",
+    "kind": "Event",
+    "message": "0/1 nodes are available: 1 node(s) didn't match pod anti-affinity rules.",
+    "name": "hello-7db79cdc77-hsst2.16c28ea49130fe10",
     "namespace": "default",
-    "uid": "26e6d843-9aef-4e51-8f2e-0e553d00d120",
-    "resourceVersion": "191817",
-    "creationTimestamp": "2021-12-18T23:11:34Z",
-    "managedFields": [
-      {
-        "manager": "kube-scheduler",
-        "operation": "Update",
-        "apiVersion": "events.k8s.io/v1",
-        "time": "2021-12-18T23:11:34Z",
-        "fieldsType": "FieldsV1",
-        "fieldsV1": {
-          "f:action": {},
-          "f:eventTime": {},
-          "f:note": {},
-          "f:reason": {},
-          "f:regarding": {},
-          "f:reportingController": {},
-          "f:reportingInstance": {},
-          "f:type": {}
-        }
-      }
-    ]
+    "reason": "FailedScheduling",
+    "reporting_controller": "default-scheduler",
+    "reporting_instance": "default-scheduler-minikube",
+    "series_count": "4507",
+    "series_last_observed": "2021-12-23T18:55:11-08:00",
+    "type": "Warning",
+    "uid": "ceead790-59ac-45c4-83e9-0a5c39797d0c"
   },
-  "involvedObject": {
-    "kind": "Pod",
-    "namespace": "default",
-    "name": "hello-7db79cdc77-gmp89",
-    "uid": "1aabf91f-7da9-48b5-883e-8c0600ca0dfb",
-    "apiVersion": "v1",
-    "resourceVersion": "191813"
-  },
-  "reason": "FailedScheduling",
-  "message": "0/1 nodes are available: 1 node(s) didn't match pod anti-affinity rules.",
-  "source": {},
-  "firstTimestamp": null,
-  "lastTimestamp": null,
-  "type": "Warning",
-  "eventTime": "2021-12-18T23:11:34.165126Z",
-  "action": "Scheduling",
-  "reportingComponent": "default-scheduler",
-  "reportingInstance": "default-scheduler-minikube"
+  "InvolvedObject": {
+    "involved_object": "Pod",
+    "involved_object_name": "hello-7db79cdc77-hsst2",
+    "involved_object_namespace": "default",
+    "involved_object_resource_version": "295350",
+    "involved_object_uid": "38e488a1-12b4-4b61-b5b7-a485c91a614c"
+  }
 }
