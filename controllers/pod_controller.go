@@ -57,9 +57,12 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 	}
 	klog.Infof("Reconciling Pod %s Phase: %s\n", req.NamespacedName, pod.Status.Phase)
 
-	d := r.NewPodDrift(pod)
+	drift := r.NewPodDrift(pod)
 
-	r.store.Save(d.Key, d.Marshal())
+	err := r.store.Save(drift.Key, drift.Marshal())
+	if err != nil {
+		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key,err)
+	}
 	return ctrl.Result{}, nil
 }
 

@@ -35,8 +35,8 @@ func GetEventInfo(e *v1.Event) *DriftMetric {
 		"creation_timestamp":   e.CreationTimestamp.Format(time.RFC3339),
 		"reporting_controller": e.ReportingController,
 		"reporting_instance":   e.ReportingInstance,
-		"series_count":         strconv.FormatInt(int64(e.Series.Count), 10),
-		"series_last_observed": e.Series.LastObservedTime.Format(time.RFC3339),
+		//		"series_count":         strconv.FormatInt(int64(e.Series.Count), 10),
+		//"series_last_observed": e.Series.LastObservedTime.Format(time.RFC3339),
 	}
 	return dm
 }

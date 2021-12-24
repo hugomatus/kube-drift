@@ -51,15 +51,18 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
-	event := corev1.Event{}
+	var event corev1.Event
 	if err := r.Get(ctx, req.NamespacedName, &event); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	klog.Infof("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
 
-	ed := r.NewEventDrift(&event)
+	drift := r.NewEventDrift(event)
 
-	r.store.Save(ed.Key, ed.Marshal())
+	err := r.store.Save(drift.Key, drift.Marshal())
+	if err != nil {
+		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key,err)
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -72,9 +75,9 @@ func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Sto
 		Complete(r)
 }
 
-func (r *EventReconciler) NewEventDrift(event *corev1.Event) *provider.EventDrift {
-	info := provider.GetEventInfo(event)
-	o := provider.GetInvolvedObject(event)
+func (r *EventReconciler) NewEventDrift(event corev1.Event) *provider.EventDrift {
+	info := provider.GetEventInfo(&event)
+	o := provider.GetInvolvedObject(&event)
 
 	d := &provider.EventDrift{
 		EventInfo:      *info,
