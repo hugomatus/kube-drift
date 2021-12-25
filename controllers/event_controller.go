@@ -65,11 +65,13 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *EventReconciler) HandleProcessing(pod corev1.Event) error {
+func (r *EventReconciler) HandleProcessing(event corev1.Event) error {
 	drift := &provider.EventDrift{}
-	drift.NewKubeDrift(pod)
-
-	err := r.store.Save(drift.Key, drift.Marshal())
+	drift_ := (drift.NewKubeDrift(event))
+	o := drift_.(*provider.EventDrift)
+	klog.Infof(string(o.Marshal()))
+	klog.Infof("Saving record to store with key: %s", o.GetKey())
+	err := r.store.Save(drift.GetKey(), drift.Marshal())
 	if err != nil {
 		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
 		return err

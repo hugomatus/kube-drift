@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 	"strconv"
 	"time"
 )
@@ -16,19 +17,24 @@ type EventDrift struct {
 
 type InvolvedObject *DriftMetric
 
-func (r *EventDrift) NewKubeDrift(obj interface{}) KubeDrift {
+func (r *EventDrift) NewKubeDrift(obj interface{}) interface{} {
 
 	event := obj.(v1.Event)
 	info := GetEventInfo(&event)
 	o := GetInvolvedObject(&event)
 
 	d := &EventDrift{
+		Key:            fmt.Sprintf("/%s/%s/%s/%s", "event", event.Namespace, event.Name, event.UID),
 		EventInfo:      *info,
 		InvolvedObject: *o,
 	}
+	klog.Infof("Key %s ", d.Key)
 
-	d.Key = d.EventInfo["key"]
-	return KubeDrift(d)
+	return d
+}
+
+func (r *EventDrift) GetKey() string {
+	return r.Key
 }
 
 func GetEventInfo(e *v1.Event) *DriftMetric {

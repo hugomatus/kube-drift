@@ -6,14 +6,20 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"strconv"
 )
 
 type KubeDrift interface {
-	NewKubeDrift(obj interface{}) KubeDrift
+	GetKey() string
+	NewKubeDrift(obj interface{}) *KubeDrift
 }
 
 type DriftMetric map[string]string
+
+func (r *PodDrift) GetKey() string {
+	return r.Key
+}
 
 type PodDrift struct {
 	Key                 string         `json:"key"`
@@ -27,7 +33,7 @@ type PodDrift struct {
 	PodVolumes          []*DriftMetric `json:"pod_volumes"`
 }
 
-func (r *PodDrift) NewKubeDrift(obj interface{}) KubeDrift {
+func (r *PodDrift) NewKubeDrift(obj interface{}) interface{} {
 	pod := obj.(v1.Pod)
 	info := GetPodInfo(&pod)
 	cond := GetPodConditions(&pod)
@@ -38,7 +44,8 @@ func (r *PodDrift) NewKubeDrift(obj interface{}) KubeDrift {
 	annotations := GetPodAnnotations(&pod)
 	vols := GetPodVolumes(&pod)
 
-	d := &PodDrift{
+	d := PodDrift{
+		Key:                 fmt.Sprintf("/%s/%s/%s/%s", "pod", pod.Namespace, pod.Name, pod.UID),
 		PodInfo:             *info,
 		PodConditions:       *cond,
 		PodContainers:       status,
@@ -48,10 +55,8 @@ func (r *PodDrift) NewKubeDrift(obj interface{}) KubeDrift {
 		PodAnnotations:      *annotations,
 		PodVolumes:          vols,
 	}
-
-	d.Key = d.PodInfo["key"]
-
-	return KubeDrift(d)
+	klog.Infof("Key %s ", d.Key)
+	return d
 }
 
 // GetPodVolumes returns the PersistentVolumeClaim(s) of the pod

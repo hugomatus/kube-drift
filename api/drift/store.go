@@ -42,9 +42,9 @@ func (s *Store) Save(key string, data []byte) error {
 	return nil
 }
 
-func (s *Store) GetDriftByKey(key string) (PodDrift, error) {
+func (s *Store) GetDriftByKey(key string) (interface{}, error) {
 
-	drift := PodDrift{}
+	drift := &PodDrift{}
 
 	data, err := s.db.Get([]byte(key), nil)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *Store) GetDriftByKey(key string) (PodDrift, error) {
 	return drift, nil
 }
 
-func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]PodDrift, error) {
+func (s *Store) GetDriftByKeyPrefix(keyPrefix string) (interface{}, error) {
 	klog.Infof("get drift by key prefix: %s", keyPrefix)
 	var iter iterator.Iterator
 	//iter = c.db.NewIterator(nil, nil)
@@ -69,25 +69,28 @@ func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]PodDrift, error) {
 		return drifts, err
 	}
 
+	// release
+	iter.Release()
+	err = iter.Error()
+	if err != nil {
+		klog.Errorf("error releasing iterator: %s", err)
+		return nil, err
+	}
 	return drifts, nil
 }
 
-func (s *Store) GetDrifts(iter iterator.Iterator) ([]PodDrift, error) {
-	var entries []PodDrift
+func (s *Store) GetDrifts(iter iterator.Iterator) (interface{}, error) {
+	var entries []interface{}
 	cnt := 0
 
 	for iter.Next() {
-		drift := PodDrift{}
+		drift := &PodDrift{}
 		json.Unmarshal(iter.Value(), &drift)
+
 		entries = append(entries, drift)
 		cnt++
 	}
 
-	// release
-	iter.Release()
-	err := iter.Error()
-	if err != nil {
-		return nil, err
-	}
+	klog.Infof("Returning drift count: %d", cnt)
 	return entries, nil
 }

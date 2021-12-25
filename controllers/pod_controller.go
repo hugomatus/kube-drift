@@ -66,9 +66,12 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 }
 
 func (r *PodReconciler) HandleProcessing(pod corev1.Pod) error {
-	drift := &provider.PodDrift{}
-	drift.NewKubeDrift(pod)
-	err := r.store.Save(drift.Key, drift.Marshal())
+	drift := provider.PodDrift{}
+	drift_ := (drift.NewKubeDrift(pod))
+	o := drift_.(provider.PodDrift)
+	klog.Infof(string(o.Marshal()))
+	klog.Infof("Saving record to store with key: %s", o.GetKey())
+	err := r.store.Save(drift.GetKey(), drift.Marshal())
 	if err != nil {
 		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
 		return err
