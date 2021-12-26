@@ -57,7 +57,7 @@ func (s *Store) GetDriftByKey(key string) (interface{}, error) {
 	return drift, nil
 }
 
-func (s *Store) GetDriftByKeyPrefix(keyPrefix string) (interface{}, error) {
+func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]byte, error) {
 	klog.Infof("get drift by key prefix: %s", keyPrefix)
 	var iter iterator.Iterator
 	//iter = c.db.NewIterator(nil, nil)
@@ -79,12 +79,12 @@ func (s *Store) GetDriftByKeyPrefix(keyPrefix string) (interface{}, error) {
 	return drifts, nil
 }
 
-func (s *Store) GetDrifts(iter iterator.Iterator) (interface{}, error) {
-	var entries []interface{}
+func (s *Store) GetDrifts(iter iterator.Iterator) ([]byte, error) {
+	var entries []byte
 	cnt := 0
 
 	for iter.Next() {
-		entries = append(entries, iter.Value())
+		entries = append(entries, iter.Value()...)
 		cnt++
 	}
 
