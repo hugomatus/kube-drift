@@ -42,6 +42,12 @@ func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 		klog.Infof("driftHandler: %v", prefix)
 		resp, err := store.GetDriftByKeyPrefix(prefix)
 
+		if kind == "pod" {
+			resp = (resp).([]PodDrift)
+		} else if kind == "event" {
+			resp = (resp).([]EventDrift)
+		}
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
