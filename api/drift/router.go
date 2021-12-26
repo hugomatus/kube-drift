@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"encoding/json"
 	"fmt"
 	"k8s.io/klog/v2"
 	"net/http"
@@ -49,7 +48,7 @@ func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		j, err := json.Marshal(resp)
+		//j, err := json.Marshal(resp)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -59,7 +58,7 @@ func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 			}
 		}
 
-		_, err = w.Write(j)
+		_, err = w.Write(resp)
 		if err != nil {
 			fmt.Printf("Error cannot write response: %v", err)
 		}
