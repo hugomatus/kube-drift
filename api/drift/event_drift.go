@@ -34,6 +34,9 @@ func (r *EventDrift) NewKubeDrift(obj interface{}) interface{} {
 }
 
 func (r *EventDrift) GetKey() string {
+	if r.Key == "" {
+		r.Key = r.EventInfo["key"]
+	}
 	return r.Key
 }
 

@@ -69,9 +69,8 @@ func (r *PodReconciler) HandleProcessing(pod corev1.Pod) error {
 	drift := provider.PodDrift{}
 	drift_ := (drift.NewKubeDrift(pod))
 	o := drift_.(provider.PodDrift)
-	klog.Infof(string(o.Marshal()))
 	klog.Infof("Saving record to store with key: %s", o.GetKey())
-	err := r.store.Save(drift.GetKey(), drift.Marshal())
+	err := r.store.Save(o.GetKey(), o.Marshal())
 	if err != nil {
 		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
 		return err

@@ -84,7 +84,7 @@ func (s *Store) GetDrifts(iter iterator.Iterator) (interface{}, error) {
 	cnt := 0
 
 	for iter.Next() {
-		drift := &PodDrift{}
+		var drift KubeDrift
 		json.Unmarshal(iter.Value(), &drift)
 
 		entries = append(entries, drift)

@@ -18,6 +18,9 @@ type KubeDrift interface {
 type DriftMetric map[string]string
 
 func (r *PodDrift) GetKey() string {
+	if r.Key == "" {
+		r.Key = r.PodInfo["key"]
+	}
 	return r.Key
 }
 
