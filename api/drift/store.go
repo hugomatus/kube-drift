@@ -29,6 +29,9 @@ func (s *Store) New(path string) error {
 	return nil
 }
 
+func (s *Store) DB() *leveldb.DB {
+	return s.db
+}
 func (s *Store) Close() {
 	s.db.Close()
 }

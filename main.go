@@ -22,8 +22,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
 	provider "github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/utils"
 	"net/http"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -55,8 +57,16 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var metricResolution time.Duration
+	var metricDuration time.Duration
+	var dbStoragePath string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+
+	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
+	flag.DurationVar(&metricDuration, "metric-duration", 15*time.Second, "The duration after which metrics are purged from the database.")
+	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
+
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -67,7 +77,8 @@ func main() {
 	flag.Parse()
 
 	store := &provider.Store{}
-	store.New("/tmp/kube-drift")
+	store.New(dbStoragePath)
+
 	go func() {
 		setupLog.Info("Start API Server::ListenAndServe on port 8001")
 		r := mux.NewRouter()
@@ -80,8 +91,6 @@ func main() {
 		}
 	}()
 
-	/*	store := &provider.Store{}
-		store.New("/tmp/kube-drift")*/
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -142,4 +151,5 @@ func main() {
 		os.Exit(1)
 	}
 
+	go controllers.ScrapeStats(utils.GetKubeconfig(), metricResolution, metricDuration, store)
 }
