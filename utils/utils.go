@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	flag "github.com/spf13/pflag"
 	"hash/fnv"
 	"k8s.io/client-go/util/homedir"
@@ -42,6 +41,5 @@ func GetUniqueKey() string {
 	// Hash of Timestamp
 	h.Write([]byte(time.Now().String()))
 	key := hex.EncodeToString(h.Sum(nil))
-	fmt.Printf("\nGenerated Unique Key %s", key)
 	return key
 }

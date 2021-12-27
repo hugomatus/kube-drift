@@ -80,8 +80,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 			continue
 		}
 
-		key, err := save(storage, data)
-		klog.Infof("Metric Sample: saved using key %s", key)
+		_, err := save(storage, data)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to scrape metrics")
@@ -94,7 +93,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 func save(storage *provider.Store, data map[string][]byte) (string, error) {
 
 	var keyPrefix string
-	var cnt int
+	var cnt, total int
 	for nodeName, v := range data {
 		//key = utils.GetUniqueKey()
 
@@ -104,11 +103,10 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 			klog.Error(err)
 			return "", err
 		}
-
 		for _, result := range results {
 			key := utils.GetUniqueKey()
 			d, _ := result.MarshalJSON()
-			keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key, cnt)
+			keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
 
 			err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
 
@@ -117,10 +115,12 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 				klog.Error(err)
 			}
 			cnt++
-			klog.Infof(fmt.Sprintf("Saved Metric Sample:%s", keyPrefix))
-		}
 
+		}
+		klog.Infof(fmt.Sprintf("SubTotal: Node=%s Metric Sample Records=%v", nodeName, cnt))
+		total += cnt
 		cnt = 0
 	}
+	klog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", total))
 	return keyPrefix, nil
 }
