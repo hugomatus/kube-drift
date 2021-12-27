@@ -18,23 +18,7 @@ import (
 func cadvisorHandler(s *Store) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
-		vars := mux.Vars(r)
-
-		//{name}/{namespace}/{pod-tempate-hash}
-		prefixKey := vars["name"]
-		/*	namespace := vars["namespace"]
-			podTemplateHash := vars["pod-template-hash"]
-			prefixKey := ""
-
-			if node != "" {
-				prefixKey = fmt.Sprintf("/%s", node)
-			}
-			if namespace != "" {
-				prefixKey = fmt.Sprintf("%s/%s", prefixKey, namespace)
-			}
-			if podTemplateHash != "" {
-				prefixKey = fmt.Sprintf("%s/%s", prefixKey, podTemplateHash)
-			}*/
+		prefixKey := getKeyPrefix(r)
 
 		klog.Infof("cadvisorHandler: %s", prefixKey)
 		resp, err := getStatsSummary(s, prefixKey)
@@ -68,7 +52,6 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 
 func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	var results []*model.Sample
-	//var summaryStats SummaryStats
 	var iter iterator.Iterator
 	cnt := 0
 
@@ -80,14 +63,6 @@ func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	}
 
 	for iter.Next() {
-		//if cnt < 2 {
-		//samples, err := DecodeResponse(iter.Value())
-
-		/*	if err != nil {
-			klog.Error(err)
-			return nil, err
-		}*/
-		//(iter.Value()).(Met)
 		result := model.Sample{}
 		err := json.Unmarshal(iter.Value(), &result)
 
@@ -97,7 +72,6 @@ func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
 		}
 		results = append(results, &result)
 		cnt++
-		//}
 	}
 
 	klog.Infof("Status: Retrieved %d records from store", cnt)
@@ -141,4 +115,22 @@ func DecodeResponse(data []byte) ([]*model.Sample, error) {
 		samples = append(samples, v...)
 	}
 	return samples, nil
+}
+
+func getKeyPrefix(r *http.Request) string {
+	vars := mux.Vars(r)
+	prefixKey := fmt.Sprintf("/%s", vars["name"])
+	//{name}/{namespace}/{podname}/{metric}
+
+	if vars["namespace"] != "" {
+		prefixKey = fmt.Sprintf("/%s/%s", vars["name"], vars["namespace"])
+	}
+	if vars["podname"] != "" {
+		prefixKey = fmt.Sprintf("/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"])
+	}
+
+	if vars["metric"] != "" {
+		prefixKey = fmt.Sprintf("/%s/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"], vars["metric"])
+	}
+	return prefixKey
 }

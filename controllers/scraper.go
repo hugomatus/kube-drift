@@ -92,30 +92,35 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 }
 
 func save(storage *provider.Store, data map[string][]byte) (string, error) {
-	var key string
 
+	var keyPrefix string
+	var cnt int
 	for nodeName, v := range data {
-		key = utils.GetUniqueKey()
+		//key = utils.GetUniqueKey()
+
 		results, err := provider.DecodeResponse(v)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode response")
 			klog.Error(err)
 			return "", err
 		}
+
 		for _, result := range results {
-
+			key := utils.GetUniqueKey()
 			d, _ := result.MarshalJSON()
+			keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key, cnt)
 
-			keyPrefix := fmt.Sprintf("%s-%s-%s-%s-%s", nodeName, result.Metric["__name__"], string(result.Metric["namespace"]), string(result.Metric["pod"]), key)
-			klog.Infof(fmt.Sprintf("Saving Metric Samples:%s", keyPrefix))
 			err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
 
 			if err != nil {
 				err = errors.Wrap(err, "failed to save metrics scrape record")
 				klog.Error(err)
 			}
+			cnt++
+			klog.Infof(fmt.Sprintf("Saved Metric Sample:%s", keyPrefix))
 		}
 
+		cnt = 0
 	}
-	return key, nil
+	return keyPrefix, nil
 }
