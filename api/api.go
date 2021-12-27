@@ -13,7 +13,7 @@ import (
 
 // Manager provides a handler for all api calls
 func Manager(r *mux.Router, store *provider.Store) {
-	router := r.PathPrefix("/api/v1/drift").Subrouter()
+	router := r.PathPrefix("/api/v1").Subrouter()
 	provider.APIRouter(router, store)
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)
 }

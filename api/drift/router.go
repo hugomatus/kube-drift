@@ -12,11 +12,11 @@ import (
 
 // APIRouter defines the usable API routes
 func APIRouter(r *mux.Router, store *Store) {
-	r.Path("/nodes/metrics/stats/summary").HandlerFunc(statsSummaryHandler(store))
-	/*	r.Path("/nodes/{Name}/metrics/stats/summary").HandlerFunc(statsSummaryHandler(store))
-		r.Path("/{kind}").HandlerFunc(driftHandler(store))
-		r.Path("/{kind}/{namespace}").HandlerFunc(driftHandler(store))
-		r.Path("/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(store))*/
+	///{namespace}/{pod-tempate-hash}
+	r.Path("/metrics/nodes/{name}").HandlerFunc(cadvisorHandler(store))
+	r.Path("/drift/{kind}").HandlerFunc(driftHandler(store))
+	r.Path("/drift/{kind}/{namespace}").HandlerFunc(driftHandler(store))
+	r.Path("/drift/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(store))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 

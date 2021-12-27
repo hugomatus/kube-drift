@@ -56,7 +56,6 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 	for _, node := range nodes {
 
 		go func(node corev1.Node) {
-			klog.Infof("Scraping Node:  %s", node.Name)
 
 			//kubectl get --raw /api/v1/nodes/cygnus/proxy/stats/summary -v 10
 			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("stats/summary")
@@ -93,9 +92,11 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 
 func save(storage *provider.Store, data map[string][]byte) (string, error) {
 	key := utils.GetUniqueKey()
-	klog.Infof("Generated Unique Key %s", key)
+
+	//node/namespace/pod-hash
 
 	for nodeName, v := range data {
+		klog.Infof(fmt.Sprintf("Saving Metric Samples: %s-%s", nodeName, key))
 		err := storage.DB().Put([]byte(fmt.Sprintf("%s-%s", nodeName, key)), []byte(v), nil)
 
 		if err != nil {

@@ -15,12 +15,29 @@ import (
 	"strings"
 )
 
-func statsSummaryHandler(s *Store) http.HandlerFunc {
+func cadvisorHandler(s *Store) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
 
-		resp, err := getStatsSummary(s, vars["Name"])
+		//{name}/{namespace}/{pod-tempate-hash}
+		prefixKey := vars["name"]
+		/*	namespace := vars["namespace"]
+			podTemplateHash := vars["pod-template-hash"]
+			prefixKey := ""
+
+			if node != "" {
+				prefixKey = fmt.Sprintf("/%s", node)
+			}
+			if namespace != "" {
+				prefixKey = fmt.Sprintf("%s/%s", prefixKey, namespace)
+			}
+			if podTemplateHash != "" {
+				prefixKey = fmt.Sprintf("%s/%s", prefixKey, podTemplateHash)
+			}*/
+
+		klog.Infof("cadvisorHandler: %s", prefixKey)
+		resp, err := getStatsSummary(s, prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -49,14 +66,14 @@ func statsSummaryHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getStatsSummary(s *Store, nodeName string) ([]*model.Sample, error) {
+func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	//var summaryStats SummaryStats
 	var iter iterator.Iterator
 	cnt := 0
-	nodeName = "minikube"
-	if len(nodeName) > 0 {
-		iter = s.db.NewIterator(util.BytesPrefix([]byte(fmt.Sprintf("%s-", nodeName))), nil)
+
+	if len(keyPrefix) > 0 {
+		iter = s.db.NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
 
 	} else {
 		iter = s.db.NewIterator(nil, nil)
