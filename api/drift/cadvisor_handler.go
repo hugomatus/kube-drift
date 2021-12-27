@@ -80,16 +80,24 @@ func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	}
 
 	for iter.Next() {
-		if cnt < 2 {
-			samples, err := DecodeResponse(iter.Value())
+		//if cnt < 2 {
+		//samples, err := DecodeResponse(iter.Value())
 
-			if err != nil {
-				klog.Error(err)
-				return nil, err
-			}
-			results = append(results, samples...)
-			cnt++
+		/*	if err != nil {
+			klog.Error(err)
+			return nil, err
+		}*/
+		//(iter.Value()).(Met)
+		result := model.Sample{}
+		err := json.Unmarshal(iter.Value(), &result)
+
+		if err != nil {
+			klog.Error(err)
+			return nil, err
 		}
+		results = append(results, &result)
+		cnt++
+		//}
 	}
 
 	klog.Infof("Status: Retrieved %d records from store", cnt)

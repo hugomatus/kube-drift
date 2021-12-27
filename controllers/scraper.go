@@ -6,6 +6,7 @@ import (
 	provider "github.com/hugomatus/kube-drift/api/drift"
 	"github.com/hugomatus/kube-drift/utils"
 	"github.com/pkg/errors"
+	//"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -91,18 +92,30 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 }
 
 func save(storage *provider.Store, data map[string][]byte) (string, error) {
-	key := utils.GetUniqueKey()
-
-	//node/namespace/pod-hash
+	var key string
 
 	for nodeName, v := range data {
-		klog.Infof(fmt.Sprintf("Saving Metric Samples: %s-%s", nodeName, key))
-		err := storage.DB().Put([]byte(fmt.Sprintf("%s-%s", nodeName, key)), []byte(v), nil)
-
+		key = utils.GetUniqueKey()
+		results, err := provider.DecodeResponse(v)
 		if err != nil {
-			err = errors.Wrap(err, "failed to save metrics scrape record")
+			err = errors.Wrap(err, "failed to decode response")
 			klog.Error(err)
+			return "", err
 		}
+		for _, result := range results {
+
+			d, _ := result.MarshalJSON()
+
+			keyPrefix := fmt.Sprintf("%s-%s-%s-%s-%s", nodeName, result.Metric["__name__"], string(result.Metric["namespace"]), string(result.Metric["pod"]), key)
+			klog.Infof(fmt.Sprintf("Saving Metric Samples:%s", keyPrefix))
+			err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
+
+			if err != nil {
+				err = errors.Wrap(err, "failed to save metrics scrape record")
+				klog.Error(err)
+			}
+		}
+
 	}
 	return key, nil
 }
