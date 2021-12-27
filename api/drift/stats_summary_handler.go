@@ -1,13 +1,18 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"io"
 	"k8s.io/klog/v2"
 	"net/http"
+	"strings"
 )
 
 func statsSummaryHandler(s *Store) http.HandlerFunc {
@@ -44,13 +49,12 @@ func statsSummaryHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getStatsSummary(s *Store, nodeName string) ([]SummaryStats, error) {
-
-	var results []SummaryStats
-	var summaryStats SummaryStats
+func getStatsSummary(s *Store, nodeName string) ([]*model.Sample, error) {
+	var results []*model.Sample
+	//var summaryStats SummaryStats
 	var iter iterator.Iterator
 	cnt := 0
-
+	nodeName = "minikube"
 	if len(nodeName) > 0 {
 		iter = s.db.NewIterator(util.BytesPrefix([]byte(fmt.Sprintf("%s-", nodeName))), nil)
 
@@ -59,18 +63,19 @@ func getStatsSummary(s *Store, nodeName string) ([]SummaryStats, error) {
 	}
 
 	for iter.Next() {
-		//if cnt < 26 {
-		err := json.Unmarshal(iter.Value(), &summaryStats)
-		if err != nil {
-			klog.Error(err)
-			return nil, err
+		if cnt < 2 {
+			samples, err := DecodeResponse(iter.Value())
+
+			if err != nil {
+				klog.Error(err)
+				return nil, err
+			}
+			results = append(results, samples...)
+			cnt++
 		}
-		results = append(results, summaryStats)
-		cnt++
-		//}
 	}
 
-	klog.Infof("Status: Retrieved %d records from s")
+	klog.Infof("Status: Retrieved %d records from store", cnt)
 
 	//release
 	iter.Release()
@@ -81,4 +86,34 @@ func getStatsSummary(s *Store, nodeName string) ([]SummaryStats, error) {
 	}
 
 	return results, nil
+}
+
+func DecodeResponse(data []byte) ([]*model.Sample, error) {
+
+	ioReaderData := strings.NewReader(string(data))
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(ioReaderData)
+
+	if err != nil {
+		return nil, err
+	}
+	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
+	decoder := expfmt.SampleDecoder{
+		Dec:  dec,
+		Opts: &expfmt.DecodeOptions{},
+	}
+
+	var samples []*model.Sample
+	for {
+		var v model.Vector
+		if err := decoder.Decode(&v); err != nil {
+			if err == io.EOF {
+				// Expected loop termination condition.
+				break
+			}
+			return nil, err
+		}
+		samples = append(samples, v...)
+	}
+	return samples, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 	"strconv"
 	"time"
 )
@@ -28,8 +27,6 @@ func (r *EventDrift) NewKubeDrift(obj interface{}) interface{} {
 		EventInfo:      *info,
 		InvolvedObject: *o,
 	}
-	klog.Infof("Key %s ", d.Key)
-
 	return d
 }
 

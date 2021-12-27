@@ -23,6 +23,10 @@ import (
 	"github.com/hugomatus/kube-drift/api"
 	provider "github.com/hugomatus/kube-drift/api/drift"
 	"github.com/hugomatus/kube-drift/utils"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/component-base/logs"
+	"k8s.io/klog/v2"
 	"net/http"
 	"os"
 	"time"
@@ -54,6 +58,8 @@ func init() {
 }
 
 func main() {
+	logs.InitLogs()
+	defer logs.FlushLogs()
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -109,7 +115,7 @@ func main() {
 	if err = (&controllers.PodReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store); err != nil {
+	}).SetupWithManager(mgr, store, metricResolution, GetKubernetesClient()); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Pod")
 		os.Exit(1)
 	}
@@ -151,5 +157,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	go controllers.ScrapeStats(utils.GetKubeconfig(), metricResolution, metricDuration, store)
+	/*ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go controllers.ScrapeStats(ctx, utils.GetKubeconfig(), metricResolution, metricDuration, store)*/
+}
+
+func GetKubernetesClient() *kubernetes.Clientset {
+
+	kubeconfig := utils.GetKubeconfig()
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		klog.Fatalf("Unable to generate a client config: %s", err)
+	}
+	klog.Infof("Kubernetes host: %s", config.Host)
+
+	// create k8 clientset
+	clientsetCorev1, err := kubernetes.NewForConfig(config)
+
+	if err != nil {
+		klog.Fatalf("Unable to generate a clientset: %s", err)
+	}
+
+	return clientsetCorev1
 }

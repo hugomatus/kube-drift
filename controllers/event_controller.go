@@ -55,8 +55,6 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err := r.Get(ctx, req.NamespacedName, &event); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	klog.Infof("Reconciling Event %s/%s\n Reason: %s Message: %s", event.Namespace, event.Name, event.Reason, event.Message)
-
 	err := r.HandleProcessing(event)
 	if err != nil {
 		return ctrl.Result{}, err

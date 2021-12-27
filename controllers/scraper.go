@@ -9,33 +9,19 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	v1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
+	"sync"
 	"time"
 )
 
-func ScrapeStats(kubeconfig *string, metricResolution time.Duration, metricDuration time.Duration, storage *provider.Store) {
+type scraper struct {
+	nodeLister    v1listers.NodeLister
+	scrapeTimeout time.Duration
+	buffers       sync.Pool
+}
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		klog.Fatalf("Unable to generate a client config: %s", err)
-	}
-
-	klog.Infof("Kubernetes host: %s", config.Host)
-
-	// create k8 clientset
-	clientsetCorev1, err := kubernetes.NewForConfig(config)
-
-	if err != nil {
-		klog.Fatalf("Unable to generate a clientset: %s", err)
-	}
-
-	/*go func() {
-		r := mux.NewRouter()
-		api.Manager(r, storage)
-		// Bind to a port and pass our router in
-		klog.Fatal(http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r)))
-	}()*/
+func ScrapeStats(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Duration, storage *provider.Store) {
 
 	//Scrape @ every metricResolution
 	ticker := time.NewTicker(metricResolution)
@@ -48,9 +34,7 @@ func ScrapeStats(kubeconfig *string, metricResolution time.Duration, metricDurat
 			return
 
 		case <-ticker.C:
-			klog.Infof("Status: Start Scraping...")
 			scrape(clientsetCorev1, storage)
-			klog.Infof("Status: Done Scraping...")
 		}
 	}
 }
@@ -75,7 +59,8 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 			klog.Infof("Scraping Node:  %s", node.Name)
 
 			//kubectl get --raw /api/v1/nodes/cygnus/proxy/stats/summary -v 10
-			request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("stats/summary")
+			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("stats/summary")
+			request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
 			response, err := request.DoRaw(context.Background())
 
 			if err != nil {
@@ -96,7 +81,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 		}
 
 		key, err := save(storage, data)
-		klog.Infof("Saved Sample using key %s", key)
+		klog.Infof("Metric Sample: saved using key %s", key)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to scrape metrics")

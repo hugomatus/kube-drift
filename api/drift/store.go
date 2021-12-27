@@ -41,7 +41,7 @@ func (s *Store) Save(key string, data []byte) error {
 	if err != nil {
 		klog.Error(err)
 	}
-	klog.Infof("saved drift: %s", key)
+	klog.Infof("Drift: saved using key: %s", key)
 	return nil
 }
 
