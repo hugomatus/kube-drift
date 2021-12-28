@@ -1,27 +1,23 @@
 package provider
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"io"
 	appLog "k8s.io/klog/v2"
 	"net/http"
-	"strings"
 )
 
 func cadvisorHandler(s *Store) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
-		prefixKey := getKeyPrefix(r)
+		prefixKey := handleVars(r)
 
 		appLog.Infof("cadvisorHandler: %s", prefixKey)
-		resp, err := getCAdvisorMetrics(s, prefixKey)
+		resp, err := getMetrics(s, prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -50,16 +46,16 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getCAdvisorMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
+func getMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0
 
 	if len(keyPrefix) > 0 {
-		iter = s.db.NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
+		iter = s.DB().NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
 
 	} else {
-		iter = s.db.NewIterator(nil, nil)
+		iter = s.DB().NewIterator(nil, nil)
 	}
 
 	for iter.Next() {
@@ -87,36 +83,7 @@ func getCAdvisorMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	return results, nil
 }
 
-func DecodeResponse(data []byte) ([]*model.Sample, error) {
-
-	ioReaderData := strings.NewReader(string(data))
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(ioReaderData)
-
-	if err != nil {
-		return nil, err
-	}
-	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
-	decoder := expfmt.SampleDecoder{
-		Dec:  dec,
-		Opts: &expfmt.DecodeOptions{},
-	}
-
-	var samples []*model.Sample
-	for {
-		var v model.Vector
-		if err := decoder.Decode(&v); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		samples = append(samples, v...)
-	}
-	return samples, nil
-}
-
-func getKeyPrefix(r *http.Request) string {
+func handleVars(r *http.Request) string {
 	vars := mux.Vars(r)
 	prefixKey := fmt.Sprintf("/%s", vars["name"])
 	//{name}/{namespace}/{podname}/{metric}

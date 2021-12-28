@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	provider "github.com/hugomatus/kube-drift/api/drift"
+	data "github.com/hugomatus/kube-drift/api/drift"
 	"github.com/pkg/errors"
 	"hash/fnv"
 
@@ -48,7 +48,7 @@ var metricLabel = MetricLabels{
 	"container_network_transmit_errors_total": 0,
 }
 
-func ScrapeStats(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Duration, storage *provider.Store) {
+func ScrapeMetrics(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Duration, storage *data.Store) {
 
 	//Scrape @ every metricResolution
 	ticker := time.NewTicker(metricResolution)
@@ -67,7 +67,7 @@ func ScrapeStats(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Du
 }
 
 // scrape each node in the cluster for stats/summary
-func scrape(client *kubernetes.Clientset, storage *provider.Store) {
+func scrape(client *kubernetes.Clientset, storage *data.Store) {
 
 	nodeList, err := client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
@@ -114,12 +114,12 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 	}
 }
 
-func save(storage *provider.Store, data map[string][]byte) (string, error) {
+func save(storage *data.Store, d map[string][]byte) (string, error) {
 
 	var keyPrefix string
 	var cnt, total int
-	for nodeName, v := range data {
-		results, err := provider.DecodeResponse(v)
+	for nodeName, v := range d {
+		results, err := data.DecodeResponse(v)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode response")
 			appLog.Error(err)

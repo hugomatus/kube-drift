@@ -82,7 +82,7 @@ func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Store
 
 	r.store = store
 
-	go ScrapeStats(clientSet, res, r.store)
+	go ScrapeMetrics(clientSet, res, r.store)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).

@@ -1,11 +1,16 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"io"
 	appLog "k8s.io/klog/v2"
+	"strings"
 	"time"
 )
 
@@ -91,4 +96,33 @@ func (s *Store) GetDrifts(iter iterator.Iterator) ([]byte, error) {
 
 	appLog.Infof("Returning drift count: %d", cnt)
 	return entries, nil
+}
+
+func DecodeResponse(data []byte) ([]*model.Sample, error) {
+
+	ioReaderData := strings.NewReader(string(data))
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(ioReaderData)
+
+	if err != nil {
+		return nil, err
+	}
+	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
+	decoder := expfmt.SampleDecoder{
+		Dec:  dec,
+		Opts: &expfmt.DecodeOptions{},
+	}
+
+	var samples []*model.Sample
+	for {
+		var v model.Vector
+		if err := decoder.Decode(&v); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		samples = append(samples, v...)
+	}
+	return samples, nil
 }

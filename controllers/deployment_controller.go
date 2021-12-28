@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"context"
-	provider "github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/api/drift"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
