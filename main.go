@@ -21,7 +21,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
-	"github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/api/store"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -82,7 +82,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	store := &provider.Store{}
+	store := &store.Store{}
 	store.New(dbStoragePath)
 
 	go func() {
@@ -162,7 +162,7 @@ func GetKubernetesClient() *kubernetes.Clientset {
 
 	var config string
 	if home := homedir.HomeDir(); home != "" {
-		config = filepath.Join(home, ".kube", "restConfig")
+		config = filepath.Join(home, ".kube", "config")
 	} else {
 		config = ""
 	}

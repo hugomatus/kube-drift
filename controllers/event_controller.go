@@ -18,7 +18,8 @@ package controllers
 
 import (
 	"context"
-	provider "github.com/hugomatus/kube-drift/api/drift"
+	store3 "github.com/hugomatus/kube-drift/api/store"
+	"github.com/hugomatus/kube-drift/api/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	appLog "k8s.io/klog/v2"
@@ -31,7 +32,7 @@ import (
 type EventReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	store  *provider.Store
+	store  *store3.Store
 }
 
 //+kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
@@ -64,19 +65,19 @@ func (r *EventReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 func (r *EventReconciler) HandleProcessing(event corev1.Event) error {
-	drift := &provider.EventDrift{}
-	drift_ := (drift.NewKubeDrift(event))
-	o := drift_.(*provider.EventDrift)
-	err := r.store.Save(o.GetKey(), o.Marshal())
+	d := &types.EventDrift{}
+	d_ := (d.NewKubeDrift(event)).(*types.EventDrift)
+	//o := drift_.(*provider.EventDrift)
+	err := r.store.Save(d_.GetKey(), d_.Marshal())
 	if err != nil {
-		appLog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
+		appLog.Errorf("Failed to save event d: with key %s\n%v", d_.Key, err)
 		return err
 	}
 	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Store) error {
+func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *store3.Store) error {
 	r.store = store
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Event{}).

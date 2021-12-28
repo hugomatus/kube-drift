@@ -1,9 +1,10 @@
-package provider
+package drift
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/hugomatus/kube-drift/api/store"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -11,7 +12,7 @@ import (
 	"net/http"
 )
 
-func cadvisorHandler(s *Store) http.HandlerFunc {
+func cadvisorHandler(s *store.Store) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		prefixKey := handleVars(r)
@@ -46,7 +47,7 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getMetrics(s *Store, k string) ([]*model.Sample, error) {
+func getMetrics(s *store.Store, k string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0

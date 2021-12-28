@@ -1,7 +1,8 @@
-package provider
+package drift
 
 import (
 	"fmt"
+	"github.com/hugomatus/kube-drift/api/store"
 	"net/http"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // APIRouter defines the usable API routes
-func APIRouter(r *mux.Router, s *Store) {
+func APIRouter(r *mux.Router, s *store.Store) {
 	r.Path("/metrics/nodes/{name}").HandlerFunc(cadvisorHandler(s))
 	r.Path("/metrics/nodes/{name}/{namespace}").HandlerFunc(cadvisorHandler(s))
 	r.Path("/metrics/nodes/{name}/{namespace}/{podname}").HandlerFunc(cadvisorHandler(s))

@@ -1,10 +1,10 @@
-package controllers
+package scraper
 
 import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	data "github.com/hugomatus/kube-drift/api/drift"
+	data "github.com/hugomatus/kube-drift/api/store"
 	"github.com/pkg/errors"
 	"hash/fnv"
 
@@ -48,7 +48,7 @@ var metricLabel = MetricLabels{
 	"container_network_transmit_errors_total": 0,
 }
 
-func ScrapeMetrics(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
+func Start(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
 
 	//Scrape @ every r (metric resolution)
 	ticker := time.NewTicker(r)
@@ -77,34 +77,34 @@ func scrape(c *kubernetes.Clientset, s *data.Store) {
 		appLog.Error(err)
 	}
 
-	responseChannel := make(chan map[string][]byte, len(nodes))
-	defer close(responseChannel)
+	q := make(chan map[string][]byte, len(nodes))
+	defer close(q)
 
-	for _, node := range nodes {
+	for _, n := range nodes {
 
 		go func(node corev1.Node) {
 
-			request := c.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
-			response, err := request.DoRaw(context.Background())
+			req := c.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
+			resp, err := req.DoRaw(context.Background())
 
 			if err != nil {
 				err = errors.Wrap(err, "failed to scrape metrics")
 				appLog.Error(err)
 			}
 
-			responseChannel <- map[string][]byte{
-				node.Name: response,
+			q <- map[string][]byte{
+				node.Name: resp,
 			}
-		}(node)
+		}(n)
 	}
 
 	for range nodes {
-		data := <-responseChannel
-		if data == nil {
+		d := <-q
+		if d == nil {
 			continue
 		}
 
-		_, err := save(s, data)
+		_, err := save(s, d)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")
@@ -116,22 +116,24 @@ func scrape(c *kubernetes.Clientset, s *data.Store) {
 
 func save(s *data.Store, d map[string][]byte) (string, error) {
 
-	var keyPrefix string
-	var cnt, total int
-	for nodeName, v := range d {
-		results, err := data.DecodeResponse(v)
+	var prefix string
+	var cnt int
+
+	//for each node key: nodeName, value: []byte
+	for n, v := range d {
+		resp, err := data.DecodeResponse(v)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode response")
 			appLog.Error(err)
 			return "", err
 		}
-		for _, result := range results {
-			if _, found := metricLabel[string(result.Metric["__name__"])]; found {
+		for _, sample := range resp {
+			if _, found := metricLabel[string(sample.Metric["__name__"])]; found {
 				key := GetUniqueKey()
-				d, _ := result.MarshalJSON()
-				keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
+				d, _ := sample.MarshalJSON()
+				prefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", n, string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"], key)
 
-				err = s.DB().Put([]byte(keyPrefix), []byte(d), nil)
+				err = s.DB().Put([]byte(prefix), []byte(d), nil)
 				if err != nil {
 					err = errors.Wrap(err, "failed to save metrics scrape record")
 					appLog.Error(err)
@@ -139,12 +141,9 @@ func save(s *data.Store, d map[string][]byte) (string, error) {
 				cnt++
 			}
 		}
-		appLog.Infof(fmt.Sprintf("SubTotal: Node=%s Metric Sample Records=%v", nodeName, cnt))
-		total += cnt
-		cnt = 0
 	}
-	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", total))
-	return keyPrefix, nil
+	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", cnt))
+	return prefix, nil
 }
 
 func GetUniqueKey() string {

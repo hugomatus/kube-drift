@@ -2,7 +2,8 @@ package api
 
 import (
 	"fmt"
-	drift "github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/api/store"
 	appLog "k8s.io/klog/v2"
 	"net/http"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // Manager provides a handler for all api calls
-func Manager(r *mux.Router, store *drift.Store) {
+func Manager(r *mux.Router, store *store.Store) {
 	router := r.PathPrefix("/api/v1").Subrouter()
 	drift.APIRouter(router, store)
 	r.PathPrefix("/").HandlerFunc(DefaultHandler)

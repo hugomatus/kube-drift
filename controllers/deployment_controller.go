@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"context"
-	"github.com/hugomatus/kube-drift/api/drift"
+	"github.com/hugomatus/kube-drift/api/store"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -30,7 +30,7 @@ import (
 type DeploymentReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	store  *provider.Store
+	store  *store.Store
 }
 
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
@@ -60,7 +60,7 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager, store *provider.Store) error {
+func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager, store *store.Store) error {
 	r.store = store
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1.Deployment{}).

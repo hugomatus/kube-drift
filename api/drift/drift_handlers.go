@@ -1,13 +1,14 @@
-package provider
+package drift
 
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/hugomatus/kube-drift/api/store"
 	appLog "k8s.io/klog/v2"
 	"net/http"
 )
 
-func driftHandler(s *Store) func(http.ResponseWriter, *http.Request) {
+func driftHandler(s *store.Store) func(http.ResponseWriter, *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)

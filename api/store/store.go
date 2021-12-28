@@ -1,8 +1,9 @@
-package provider
+package store
 
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/hugomatus/kube-drift/api/types"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -53,14 +54,14 @@ func (s *Store) Save(k string, data []byte) error {
 	if err != nil {
 		appLog.Error(err)
 	}
-	appLog.Infof("Drift: saved using k: %s", k)
+	appLog.Infof("Drift: saved using key: %s", k)
 	return nil
 }
 
 // GetDriftByKey returns the drift value for a given key
 func (s *Store) GetDriftByKey(k string) (interface{}, error) {
 
-	drift := &PodDrift{}
+	drift := &types.PodDrift{}
 	data, err := s.db.Get([]byte(k), nil)
 	if err != nil {
 		return drift, err
