@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	provider "github.com/hugomatus/kube-drift/api/drift"
-	"github.com/hugomatus/kube-drift/utils"
 	"github.com/pkg/errors"
+	"hash/fnv"
+
 	//"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -130,7 +132,7 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 		}
 		for _, result := range results {
 			if _, found := metricLabel[string(result.Metric["__name__"])]; found {
-				key := utils.GetUniqueKey()
+				key := GetUniqueKey()
 				d, _ := result.MarshalJSON()
 				keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
 
@@ -149,4 +151,12 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 	}
 	klog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", total))
 	return keyPrefix, nil
+}
+
+func GetUniqueKey() string {
+	h := fnv.New64a()
+	// Hash of Timestamp
+	h.Write([]byte(time.Now().String()))
+	key := hex.EncodeToString(h.Sum(nil))
+	return key
 }

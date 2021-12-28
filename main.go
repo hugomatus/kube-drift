@@ -22,13 +22,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
 	provider "github.com/hugomatus/kube-drift/api/drift"
-	"github.com/hugomatus/kube-drift/utils"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -156,16 +157,18 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
-	/*ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go controllers.ScrapeStats(ctx, utils.GetKubeconfig(), metricResolution, metricDuration, store)*/
 }
 
 func GetKubernetesClient() *kubernetes.Clientset {
 
-	kubeconfig := utils.GetKubeconfig()
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	var kubeconfig string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = filepath.Join(home, ".kube", "config")
+	} else {
+		kubeconfig = ""
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		klog.Fatalf("Unable to generate a client config: %s", err)
 	}
