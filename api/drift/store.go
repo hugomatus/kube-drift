@@ -5,7 +5,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	"time"
 )
 
@@ -39,36 +39,34 @@ func (s *Store) Close() {
 func (s *Store) Save(key string, data []byte) error {
 	err := s.db.Put([]byte(key), data, nil)
 	if err != nil {
-		klog.Error(err)
+		appLog.Error(err)
 	}
-	klog.Infof("Drift: saved using key: %s", key)
+	appLog.Infof("Drift: saved using key: %s", key)
 	return nil
 }
 
 func (s *Store) GetDriftByKey(key string) (interface{}, error) {
 
 	drift := &PodDrift{}
-
 	data, err := s.db.Get([]byte(key), nil)
 	if err != nil {
 		return drift, err
 	}
 
 	err = json.Unmarshal(data, &drift)
-	//drift = Deserialize(data)
 
 	return drift, nil
 }
 
 func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]byte, error) {
-	klog.Infof("get drift by key prefix: %s", keyPrefix)
+	appLog.Infof("get drift by key prefix: %s", keyPrefix)
 	var iter iterator.Iterator
-	//iter = c.db.NewIterator(nil, nil)
+
 	iter = s.db.NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
 
 	drifts, err := s.GetDrifts(iter)
 	if err != nil {
-		klog.Errorf("error getting drift: %s", err)
+		appLog.Errorf("error getting drift: %s", err)
 		return drifts, err
 	}
 
@@ -76,7 +74,7 @@ func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]byte, error) {
 	iter.Release()
 	err = iter.Error()
 	if err != nil {
-		klog.Errorf("error releasing iterator: %s", err)
+		appLog.Errorf("error releasing iterator: %s", err)
 		return nil, err
 	}
 	return drifts, nil
@@ -91,6 +89,6 @@ func (s *Store) GetDrifts(iter iterator.Iterator) ([]byte, error) {
 		cnt++
 	}
 
-	klog.Infof("Returning drift count: %d", cnt)
+	appLog.Infof("Returning drift count: %d", cnt)
 	return entries, nil
 }

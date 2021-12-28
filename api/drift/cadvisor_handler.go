@@ -10,7 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"io"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	"net/http"
 	"strings"
 )
@@ -20,14 +20,14 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 
 		prefixKey := getKeyPrefix(r)
 
-		klog.Infof("cadvisorHandler: %s", prefixKey)
+		appLog.Infof("cadvisorHandler: %s", prefixKey)
 		resp, err := getCAdvisorMetrics(s, prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err := w.Write([]byte(fmt.Sprintf("Node Metrics Error - %v", err.Error())))
 			if err != nil {
-				klog.Errorf("Error cannot write response: %v", err)
+				appLog.Errorf("Error cannot write response: %v", err)
 			}
 		}
 
@@ -37,13 +37,13 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err := w.Write([]byte(fmt.Sprintf("JSON Error - %v", err.Error())))
 			if err != nil {
-				klog.Errorf("Error cannot write response: %v", err)
+				appLog.Errorf("Error cannot write response: %v", err)
 			}
 		}
 
 		_, err = w.Write(j)
 		if err != nil {
-			klog.Errorf("Error cannot write response: %v", err)
+			appLog.Errorf("Error cannot write response: %v", err)
 		}
 	}
 
@@ -67,20 +67,20 @@ func getCAdvisorMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
 		err := json.Unmarshal(iter.Value(), &result)
 
 		if err != nil {
-			klog.Error(err)
+			appLog.Error(err)
 			return nil, err
 		}
 		results = append(results, &result)
 		cnt++
 	}
 
-	klog.Infof("Status: Retrieved %d records from store", cnt)
+	appLog.Infof("Status: Retrieved %d records from store", cnt)
 
 	//release
 	iter.Release()
 	err := iter.Error()
 	if err != nil {
-		klog.Error(err)
+		appLog.Error(err)
 		return nil, err
 	}
 

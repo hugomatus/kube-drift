@@ -21,7 +21,7 @@ import (
 	provider "github.com/hugomatus/kube-drift/api/drift"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -69,7 +69,7 @@ func (r *EventReconciler) HandleProcessing(event corev1.Event) error {
 	o := drift_.(*provider.EventDrift)
 	err := r.store.Save(o.GetKey(), o.Marshal())
 	if err != nil {
-		klog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
+		appLog.Errorf("Failed to save event drift: with key %s\n%v", drift.Key, err)
 		return err
 	}
 	return nil

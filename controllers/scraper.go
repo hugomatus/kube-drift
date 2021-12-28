@@ -13,7 +13,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	v1listers "k8s.io/client-go/listers/core/v1"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	"sync"
 	"time"
 )
@@ -24,9 +24,9 @@ type scraper struct {
 	buffers       sync.Pool
 }
 
-type MetricLabel map[string]int
+type MetricLabels map[string]int
 
-var metricLabel = MetricLabel{
+var metricLabel = MetricLabels{
 	//cpu
 	"container_cpu_user_seconds_total":   0,
 	"container_cpu_system_seconds_total": 0,
@@ -74,7 +74,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 
 	if err != nil {
 		err := errors.Wrap(err, "failed to get nodes list to scrape\n")
-		klog.Error(err)
+		appLog.Error(err)
 	}
 
 	responseChannel := make(chan map[string][]byte, len(nodes))
@@ -84,15 +84,12 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 
 		go func(node corev1.Node) {
 
-			//kubectl get --raw /api/v1/nodes/cygnus/proxy/stats/summary -v 10
-			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("stats/summary")
 			request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
-			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/resource")
 			response, err := request.DoRaw(context.Background())
 
 			if err != nil {
 				err = errors.Wrap(err, "failed to scrape metrics")
-				klog.Error(err)
+				appLog.Error(err)
 			}
 
 			responseChannel <- map[string][]byte{
@@ -111,7 +108,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")
-			klog.Error(err)
+			appLog.Error(err)
 		}
 
 	}
@@ -122,12 +119,10 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 	var keyPrefix string
 	var cnt, total int
 	for nodeName, v := range data {
-		//key = utils.GetUniqueKey()
-
 		results, err := provider.DecodeResponse(v)
 		if err != nil {
 			err = errors.Wrap(err, "failed to decode response")
-			klog.Error(err)
+			appLog.Error(err)
 			return "", err
 		}
 		for _, result := range results {
@@ -137,19 +132,18 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 				keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
 
 				err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
-
 				if err != nil {
 					err = errors.Wrap(err, "failed to save metrics scrape record")
-					klog.Error(err)
+					appLog.Error(err)
 				}
 				cnt++
 			}
 		}
-		klog.Infof(fmt.Sprintf("SubTotal: Node=%s Metric Sample Records=%v", nodeName, cnt))
+		appLog.Infof(fmt.Sprintf("SubTotal: Node=%s Metric Sample Records=%v", nodeName, cnt))
 		total += cnt
 		cnt = 0
 	}
-	klog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", total))
+	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", total))
 	return keyPrefix, nil
 }
 

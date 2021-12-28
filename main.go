@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/component-base/logs"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	"net/http"
 	"os"
 	"time"
@@ -63,13 +63,12 @@ func main() {
 	var enableLeaderElection bool
 	var probeAddr string
 	var metricResolution time.Duration
-	var metricDuration time.Duration
 	var dbStoragePath string
+
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
 	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
-	flag.DurationVar(&metricDuration, "metric-duration", 15*time.Second, "The duration after which metrics are purged from the database.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
 
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -168,15 +167,15 @@ func GetKubernetesClient() *kubernetes.Clientset {
 
 	config, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
-		klog.Fatalf("Unable to generate a client config: %s", err)
+		appLog.Fatalf("Unable to generate a client config: %s", err)
 	}
-	klog.Infof("Kubernetes host: %s", config.Host)
+	appLog.Infof("Kubernetes host: %s", config.Host)
 
 	// create k8 clientset
 	clientsetCorev1, err := kubernetes.NewForConfig(config)
 
 	if err != nil {
-		klog.Fatalf("Unable to generate a clientset: %s", err)
+		appLog.Fatalf("Unable to generate a clientset: %s", err)
 	}
 
 	return clientsetCorev1

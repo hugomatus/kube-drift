@@ -3,7 +3,7 @@ package provider
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"k8s.io/klog/v2"
+	appLog "k8s.io/klog/v2"
 	"net/http"
 )
 
@@ -26,7 +26,7 @@ func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 			prefix = fmt.Sprintf("/%s/%s/%s", kind, namespace, templateHash)
 		}
 
-		klog.Infof("driftHandler: %v", prefix)
+		appLog.Infof("driftHandler: %v", prefix)
 		resp, err := store.GetDriftByKeyPrefix(prefix)
 
 		if err != nil {
