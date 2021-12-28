@@ -14,12 +14,14 @@ import (
 	"time"
 )
 
+// Store is a wrapper around a LevelDB instance.
 type Store struct {
 	db     *leveldb.DB
 	path   string
 	window time.Duration
 }
 
+// New creates a new Store.
 func (s *Store) New(path string) error {
 	db, err := leveldb.OpenFile(path, nil)
 
@@ -34,26 +36,32 @@ func (s *Store) New(path string) error {
 	return nil
 }
 
+// DB returns the underlying leveldb database.
 func (s *Store) DB() *leveldb.DB {
 	return s.db
 }
+
+// Close closes the store.
 func (s *Store) Close() {
 	s.db.Close()
 }
 
-func (s *Store) Save(key string, data []byte) error {
-	err := s.db.Put([]byte(key), data, nil)
+// Save a new set of samples to the database.
+// args: key, value
+func (s *Store) Save(k string, data []byte) error {
+	err := s.db.Put([]byte(k), data, nil)
 	if err != nil {
 		appLog.Error(err)
 	}
-	appLog.Infof("Drift: saved using key: %s", key)
+	appLog.Infof("Drift: saved using k: %s", k)
 	return nil
 }
 
-func (s *Store) GetDriftByKey(key string) (interface{}, error) {
+// GetDriftByKey returns the drift value for a given key
+func (s *Store) GetDriftByKey(k string) (interface{}, error) {
 
 	drift := &PodDrift{}
-	data, err := s.db.Get([]byte(key), nil)
+	data, err := s.db.Get([]byte(k), nil)
 	if err != nil {
 		return drift, err
 	}
@@ -63,13 +71,14 @@ func (s *Store) GetDriftByKey(key string) (interface{}, error) {
 	return drift, nil
 }
 
-func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]byte, error) {
-	appLog.Infof("get drift by key prefix: %s", keyPrefix)
+// GetDriftByKeyPrefix returns the drift(s) value for a given key prefix
+func (s *Store) GetDriftByKeyPrefix(k string) ([]byte, error) {
+	appLog.Infof("get drift by key prefix: %s", k)
 	var iter iterator.Iterator
 
-	iter = s.db.NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
+	iter = s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
 
-	drifts, err := s.GetDrifts(iter)
+	drifts, err := s.getDrifts(iter)
 	if err != nil {
 		appLog.Errorf("error getting drift: %s", err)
 		return drifts, err
@@ -85,12 +94,12 @@ func (s *Store) GetDriftByKeyPrefix(keyPrefix string) ([]byte, error) {
 	return drifts, nil
 }
 
-func (s *Store) GetDrifts(iter iterator.Iterator) ([]byte, error) {
+func (s *Store) getDrifts(i iterator.Iterator) ([]byte, error) {
 	var entries []byte
 	cnt := 0
 
-	for iter.Next() {
-		entries = append(entries, iter.Value()...)
+	for i.Next() {
+		entries = append(entries, i.Value()...)
 		cnt++
 	}
 
@@ -98,9 +107,10 @@ func (s *Store) GetDrifts(iter iterator.Iterator) ([]byte, error) {
 	return entries, nil
 }
 
-func DecodeResponse(data []byte) ([]*model.Sample, error) {
+// DecodeResponse decodes the response from the prometheus samples
+func DecodeResponse(d []byte) ([]*model.Sample, error) {
 
-	ioReaderData := strings.NewReader(string(data))
+	ioReaderData := strings.NewReader(string(d))
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(ioReaderData)
 

@@ -160,25 +160,25 @@ func main() {
 
 func GetKubernetesClient() *kubernetes.Clientset {
 
-	var kubeconfig string
+	var config string
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = filepath.Join(home, ".kube", "config")
+		config = filepath.Join(home, ".kube", "restConfig")
 	} else {
-		kubeconfig = ""
+		config = ""
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	restConfig, err := clientcmd.BuildConfigFromFlags("", config)
 	if err != nil {
-		appLog.Fatalf("Unable to generate a client config: %s", err)
+		appLog.Fatalf("Unable to generate a client restConfig: %s", err)
 	}
-	appLog.Infof("Kubernetes host: %s", config.Host)
+	appLog.Infof("Kubernetes host: %s", restConfig.Host)
 
 	// create k8 clientset
-	clientsetCorev1, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(restConfig)
 
 	if err != nil {
 		appLog.Fatalf("Unable to generate a clientset: %s", err)
 	}
 
-	return clientsetCorev1
+	return clientset
 }

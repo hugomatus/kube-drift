@@ -48,10 +48,10 @@ var metricLabel = MetricLabels{
 	"container_network_transmit_errors_total": 0,
 }
 
-func ScrapeMetrics(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Duration, storage *data.Store) {
+func ScrapeMetrics(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
 
-	//Scrape @ every metricResolution
-	ticker := time.NewTicker(metricResolution)
+	//Scrape @ every r (metric resolution)
+	ticker := time.NewTicker(r)
 	quit := make(chan struct{})
 
 	for {
@@ -61,15 +61,15 @@ func ScrapeMetrics(clientsetCorev1 *kubernetes.Clientset, metricResolution time.
 			return
 
 		case <-ticker.C:
-			scrape(clientsetCorev1, storage)
+			scrape(c, s)
 		}
 	}
 }
 
 // scrape each node in the cluster for stats/summary
-func scrape(client *kubernetes.Clientset, storage *data.Store) {
+func scrape(c *kubernetes.Clientset, s *data.Store) {
 
-	nodeList, err := client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := c.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {
@@ -84,7 +84,7 @@ func scrape(client *kubernetes.Clientset, storage *data.Store) {
 
 		go func(node corev1.Node) {
 
-			request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
+			request := c.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
 			response, err := request.DoRaw(context.Background())
 
 			if err != nil {
@@ -104,7 +104,7 @@ func scrape(client *kubernetes.Clientset, storage *data.Store) {
 			continue
 		}
 
-		_, err := save(storage, data)
+		_, err := save(s, data)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")
@@ -114,7 +114,7 @@ func scrape(client *kubernetes.Clientset, storage *data.Store) {
 	}
 }
 
-func save(storage *data.Store, d map[string][]byte) (string, error) {
+func save(s *data.Store, d map[string][]byte) (string, error) {
 
 	var keyPrefix string
 	var cnt, total int
@@ -131,7 +131,7 @@ func save(storage *data.Store, d map[string][]byte) (string, error) {
 				d, _ := result.MarshalJSON()
 				keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
 
-				err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
+				err = s.DB().Put([]byte(keyPrefix), []byte(d), nil)
 				if err != nil {
 					err = errors.Wrap(err, "failed to save metrics scrape record")
 					appLog.Error(err)

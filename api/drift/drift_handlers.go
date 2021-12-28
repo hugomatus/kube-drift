@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
+func driftHandler(s *Store) func(http.ResponseWriter, *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
@@ -27,7 +27,7 @@ func driftHandler(store *Store) func(http.ResponseWriter, *http.Request) {
 		}
 
 		appLog.Infof("driftHandler: %v", prefix)
-		resp, err := store.GetDriftByKeyPrefix(prefix)
+		resp, err := s.GetDriftByKeyPrefix(prefix)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

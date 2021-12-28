@@ -46,13 +46,13 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
+func getMetrics(s *Store, k string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0
 
-	if len(keyPrefix) > 0 {
-		iter = s.DB().NewIterator(util.BytesPrefix([]byte(keyPrefix)), nil)
+	if len(k) > 0 {
+		iter = s.DB().NewIterator(util.BytesPrefix([]byte(k)), nil)
 
 	} else {
 		iter = s.DB().NewIterator(nil, nil)

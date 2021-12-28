@@ -11,14 +11,14 @@ import (
 )
 
 // APIRouter defines the usable API routes
-func APIRouter(r *mux.Router, store *Store) {
-	r.Path("/metrics/nodes/{name}").HandlerFunc(cadvisorHandler(store))
-	r.Path("/metrics/nodes/{name}/{namespace}").HandlerFunc(cadvisorHandler(store))
-	r.Path("/metrics/nodes/{name}/{namespace}/{podname}").HandlerFunc(cadvisorHandler(store))
-	r.Path("/metrics/nodes/{name}/{namespace}/{podname}/{metric}").HandlerFunc(cadvisorHandler(store))
-	r.Path("/drift/{kind}").HandlerFunc(driftHandler(store))
-	r.Path("/drift/{kind}/{namespace}").HandlerFunc(driftHandler(store))
-	r.Path("/drift/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(store))
+func APIRouter(r *mux.Router, s *Store) {
+	r.Path("/metrics/nodes/{name}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/metrics/nodes/{name}/{namespace}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/metrics/nodes/{name}/{namespace}/{podname}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/metrics/nodes/{name}/{namespace}/{podname}/{metric}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/drift/{kind}").HandlerFunc(driftHandler(s))
+	r.Path("/drift/{kind}/{namespace}").HandlerFunc(driftHandler(s))
+	r.Path("/drift/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(s))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 
