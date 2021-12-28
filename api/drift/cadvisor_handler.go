@@ -106,6 +106,7 @@ func DecodeResponse(data []byte) ([]*model.Sample, error) {
 	for {
 		var v model.Vector
 		if err := decoder.Decode(&v); err != nil {
+
 			if err == io.EOF {
 				// Expected loop termination condition.
 				break

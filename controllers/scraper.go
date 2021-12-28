@@ -22,6 +22,30 @@ type scraper struct {
 	buffers       sync.Pool
 }
 
+type MetricLabel map[string]int
+
+var metricLabel = MetricLabel{
+	//cpu
+	"container_cpu_user_seconds_total":   0,
+	"container_cpu_system_seconds_total": 0,
+	"container_cpu_usage_seconds_total":  0,
+	//memory
+	"container_memory_cache":           0,
+	"container_memory_swap":            0,
+	"container_memory_usage_bytes":     0,
+	"container_memory_max_usage_bytes": 0,
+	//disk
+	"container_fs_io_time_seconds_total":          0,
+	"container_fs_io_time_weighted_seconds_total": 0,
+	"container_fs_writes_bytes_total":             0,
+	"container_fs_reads_bytes_total":              0,
+	//network
+	"container_network_receive_bytes_total":   0,
+	"container_network_receive_errors_total":  0,
+	"container_network_transmit_bytes_total":  0,
+	"container_network_transmit_errors_total": 0,
+}
+
 func ScrapeStats(clientsetCorev1 *kubernetes.Clientset, metricResolution time.Duration, storage *provider.Store) {
 
 	//Scrape @ every metricResolution
@@ -61,6 +85,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 			//kubectl get --raw /api/v1/nodes/cygnus/proxy/stats/summary -v 10
 			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("stats/summary")
 			request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
+			//request := client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/resource")
 			response, err := request.DoRaw(context.Background())
 
 			if err != nil {
@@ -104,18 +129,19 @@ func save(storage *provider.Store, data map[string][]byte) (string, error) {
 			return "", err
 		}
 		for _, result := range results {
-			key := utils.GetUniqueKey()
-			d, _ := result.MarshalJSON()
-			keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
+			if _, found := metricLabel[string(result.Metric["__name__"])]; found {
+				key := utils.GetUniqueKey()
+				d, _ := result.MarshalJSON()
+				keyPrefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", nodeName, string(result.Metric["namespace"]), string(result.Metric["pod"]), result.Metric["__name__"], result.Metric["container"], key)
 
-			err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
+				err = storage.DB().Put([]byte(keyPrefix), []byte(d), nil)
 
-			if err != nil {
-				err = errors.Wrap(err, "failed to save metrics scrape record")
-				klog.Error(err)
+				if err != nil {
+					err = errors.Wrap(err, "failed to save metrics scrape record")
+					klog.Error(err)
+				}
+				cnt++
 			}
-			cnt++
-
 		}
 		klog.Infof(fmt.Sprintf("SubTotal: Node=%s Metric Sample Records=%v", nodeName, cnt))
 		total += cnt
