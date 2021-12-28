@@ -24,12 +24,10 @@ import (
 	provider "github.com/hugomatus/kube-drift/api/drift"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -161,14 +159,14 @@ func main() {
 
 func GetKubernetesClient() *kubernetes.Clientset {
 
-	var kubeconfig string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = filepath.Join(home, ".kube", "config")
-	} else {
-		kubeconfig = ""
-	}
+	/*	var kubeconfig string
+		if home := homedir.HomeDir(); home != "" {
+			kubeconfig = filepath.Join(home, ".kube", "config")
+		} else {
+			kubeconfig = ""
+		}*/
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
 		klog.Fatalf("Unable to generate a client config: %s", err)
 	}

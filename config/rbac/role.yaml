@@ -36,6 +36,12 @@ rules:
   - ""
   resources:
   - events
+  - nodes
+  - nodes/stats
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
   verbs:
   - create
   - delete
@@ -110,3 +116,12 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+    - metrics.k8s.io
+  resources:
+    - pods
+    - nodes
+  verbs:
+    - get
+    - list
+    - watch

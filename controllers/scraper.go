@@ -110,7 +110,7 @@ func scrape(client *kubernetes.Clientset, storage *provider.Store) {
 		_, err := save(storage, data)
 
 		if err != nil {
-			err = errors.Wrap(err, "failed to scrape metrics")
+			err = errors.Wrap(err, "failed to save scraped metrics")
 			klog.Error(err)
 		}
 

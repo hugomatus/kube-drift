@@ -1,0 +1,130 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRole","metadata":{"annotations":{},"creationTimestamp":"2021-12-28T04:13:33Z","name":"kube-drift-manager-role","resourceVersion":"1240683","uid":"66a2c5e6-350c-4773-a31c-eb7318ce63dc"},"rules":[{"apiGroups":["metrics.k8s.io"],"resources":["pods","nodes"],"verbs":["get","list","watch"]},{"apiGroups":["apps"],"resources":["deployments"],"verbs":["create","delete","get","list","patch","update","watch"]},{"apiGroups":["apps"],"resources":["deployments/finalizers"],"verbs":["update"]},{"apiGroups":["apps"],"resources":["deployments/status"],"verbs":["get","patch","update"]},{"apiGroups":[""],"resources":["events"],"verbs":["create","delete","get","list","patch","update","watch"]},{"apiGroups":[""],"resources":["events/finalizers"],"verbs":["update"]},{"apiGroups":[""],"resources":["events/status"],"verbs":["get","patch","update"]},{"apiGroups":[""],"resources":["nodes","nodes/stats"],"verbs":["create","delete","get","list","patch","update","watch"]},{"apiGroups":[""],"resources":["nodes/finalizers"],"verbs":["update"]},{"apiGroups":[""],"resources":["nodes/status"],"verbs":["get","patch","update"]},{"apiGroups":[""],"resources":["pods"],"verbs":["create","delete","get","list","patch","update","watch"]},{"apiGroups":[""],"resources":["pods/finalizers"],"verbs":["update"]},{"apiGroups":[""],"resources":["pods/status"],"verbs":["get","patch","update"]}]}
+  creationTimestamp: "2021-12-28T04:13:33Z"
+  name: kube-drift-manager-role
+  resourceVersion: "1307285"
+  uid: 66a2c5e6-350c-4773-a31c-eb7318ce63dc
+rules:
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/stats
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - get
+  - patch
+  - update
+  

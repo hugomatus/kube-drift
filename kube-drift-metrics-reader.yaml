@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRole","metadata":{"annotations":{},"name":"kube-drift-metrics-reader"},"rules":[{"nonResourceURLs":["/metrics"],"verbs":["get"]}]}
+  creationTimestamp: "2021-12-28T04:13:33Z"
+  name: kube-drift-metrics-reader
+  resourceVersion: "1239517"
+  uid: 8e7fb9ee-752e-4f53-995c-413c8b2baf28
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
