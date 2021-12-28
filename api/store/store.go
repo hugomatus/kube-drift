@@ -54,7 +54,7 @@ func (s *Store) Save(k string, data []byte) error {
 	if err != nil {
 		appLog.Error(err)
 	}
-	appLog.Infof("Drift: saved using key: %s", k)
+	appLog.Infof("Record: saved using key: %s", k)
 	return nil
 }
 
@@ -136,4 +136,42 @@ func DecodeResponse(d []byte) ([]*model.Sample, error) {
 		samples = append(samples, v...)
 	}
 	return samples, nil
+}
+
+// GetMetrics returns the metrics for a given key prefix
+func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
+	var results []*model.Sample
+	var iter iterator.Iterator
+	cnt := 0
+
+	if len(k) > 0 {
+		iter = s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
+
+	} else {
+		iter = s.db.NewIterator(nil, nil)
+	}
+
+	for iter.Next() {
+		result := model.Sample{}
+		err := json.Unmarshal(iter.Value(), &result)
+
+		if err != nil {
+			appLog.Error(err)
+			return nil, err
+		}
+		results = append(results, &result)
+		cnt++
+	}
+
+	appLog.Infof("Status: Retrieved %d records from store", cnt)
+
+	//release
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		appLog.Error(err)
+		return nil, err
+	}
+
+	return results, nil
 }

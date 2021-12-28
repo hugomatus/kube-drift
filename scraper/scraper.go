@@ -133,7 +133,7 @@ func save(s *data.Store, d map[string][]byte) (string, error) {
 				d, _ := sample.MarshalJSON()
 				prefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", n, string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"], key)
 
-				err = s.DB().Put([]byte(prefix), []byte(d), nil)
+				err = s.Save(prefix, d)
 				if err != nil {
 					err = errors.Wrap(err, "failed to save metrics scrape record")
 					appLog.Error(err)
