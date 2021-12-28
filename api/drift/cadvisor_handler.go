@@ -21,7 +21,7 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 		prefixKey := getKeyPrefix(r)
 
 		klog.Infof("cadvisorHandler: %s", prefixKey)
-		resp, err := getStatsSummary(s, prefixKey)
+		resp, err := getCAdvisorMetrics(s, prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func cadvisorHandler(s *Store) http.HandlerFunc {
 	return fn
 }
 
-func getStatsSummary(s *Store, keyPrefix string) ([]*model.Sample, error) {
+func getCAdvisorMetrics(s *Store, keyPrefix string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0
@@ -106,9 +106,7 @@ func DecodeResponse(data []byte) ([]*model.Sample, error) {
 	for {
 		var v model.Vector
 		if err := decoder.Decode(&v); err != nil {
-
 			if err == io.EOF {
-				// Expected loop termination condition.
 				break
 			}
 			return nil, err

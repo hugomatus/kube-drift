@@ -12,9 +12,7 @@ import (
 
 // APIRouter defines the usable API routes
 func APIRouter(r *mux.Router, store *Store) {
-	///{namespace}/{pod-tempate-hash}
 	r.Path("/metrics/nodes/{name}").HandlerFunc(cadvisorHandler(store))
-	//r.Path("/metrics/nodes/{name}/{metric}").HandlerFunc(cadvisorHandler(store))
 	r.Path("/metrics/nodes/{name}/{namespace}").HandlerFunc(cadvisorHandler(store))
 	r.Path("/metrics/nodes/{name}/{namespace}/{podname}").HandlerFunc(cadvisorHandler(store))
 	r.Path("/metrics/nodes/{name}/{namespace}/{podname}/{metric}").HandlerFunc(cadvisorHandler(store))
