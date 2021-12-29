@@ -25,10 +25,12 @@ import (
 	"github.com/hugomatus/kube-drift/scraper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"k8s.io/component-base/logs"
 	appLog "k8s.io/klog/v2"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -81,6 +83,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
+	//create datastore
 	store := &store.Store{}
 	store.New(dbStoragePath)
 
@@ -100,11 +103,17 @@ func main() {
 	//Metrics Scraper: metrics/cadvisor
 	go func() {
 		setupLog.Info("Start Scraper::ListenAndServe on port 8001")
-		c := getKubernetesClient()
+
+		s := scraper.Scraper{
+			Client:    getKubernetesClient(),
+			Store:     store,
+			Frequency: metricResolution,
+			Endpoint:  "metrics/cadvisor",
+		}
 		//first scrape
-		scraper.Scrape(c, store)
+		s.Scrape()
 		//then start the scraper and scrape @ metricResolution
-		scraper.Start(c, metricResolution, store)
+		s.Start()
 	}()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
@@ -168,7 +177,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	scraper.Start(getKubernetesClient(), metricResolution, store)
 }
 
 func getKubernetesClient() *kubernetes.Clientset {
@@ -180,7 +188,7 @@ func getKubernetesClient() *kubernetes.Clientset {
 		c = ""
 	}*/
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", "")
+	cfg, err := clientcmd.BuildConfigFromFlags("", c)
 	if err != nil {
 		appLog.Fatalf("Unable to generate a client cfg: %s", err)
 	}

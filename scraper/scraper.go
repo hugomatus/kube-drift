@@ -11,10 +11,17 @@ import (
 	"time"
 )
 
-func Start(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
+type Scraper struct {
+	Client    *kubernetes.Clientset
+	Store     *data.Store
+	Frequency time.Duration
+	Endpoint  string
+}
+
+func (s *Scraper) Start() {
 
 	//Scrape @ every r (metric resolution)
-	ticker := time.NewTicker(r)
+	ticker := time.NewTicker(s.Frequency)
 	quit := make(chan struct{})
 
 	for {
@@ -24,15 +31,15 @@ func Start(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
 			return
 
 		case <-ticker.C:
-			Scrape(c, s)
+			s.Scrape()
 		}
 	}
 }
 
-// scrape each node in the cluster for stats/summary
-func Scrape(c *kubernetes.Clientset, s *data.Store) {
+// Scrape each node in the cluster for stats/summary
+func (s *Scraper) Scrape() {
 
-	nodeList, err := c.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := s.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {
@@ -47,7 +54,7 @@ func Scrape(c *kubernetes.Clientset, s *data.Store) {
 
 		go func(node corev1.Node) {
 
-			req := c.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix("metrics/cadvisor")
+			req := s.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(s.Endpoint)
 			resp, err := req.DoRaw(context.Background())
 
 			if err != nil {
@@ -67,7 +74,7 @@ func Scrape(c *kubernetes.Clientset, s *data.Store) {
 			continue
 		}
 
-		_, err := s.SaveMetricSamples(d)
+		_, err := s.Store.SaveMetricSamples(d)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")
