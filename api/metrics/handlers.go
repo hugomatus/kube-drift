@@ -1,4 +1,4 @@
-package drift
+package metrics
 
 import (
 	"encoding/json"

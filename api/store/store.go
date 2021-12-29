@@ -57,16 +57,16 @@ func (s *Store) Save(k string, data []byte) error {
 	if err != nil {
 		appLog.Error(err)
 	}
-	appLog.Infof("Record: saved using key: %s", k)
+	//appLog.Infof("Record saved : %s", k)
 	return nil
 }
 
 // GetByKeyPrefix returns the drift(s) value for a given key prefix
 func (s *Store) GetByKeyPrefix(k string) ([]byte, error) {
-	appLog.Infof("get drift by key prefix: %s", k)
-	var iter iterator.Iterator
 
-	iter = s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
+	appLog.Infof("get drift by key prefix: %s", k)
+
+	iter := s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
 
 	drifts, err := s.getRecords(iter)
 	if err != nil {
@@ -93,7 +93,7 @@ func (s *Store) getRecords(i iterator.Iterator) ([]byte, error) {
 		cnt++
 	}
 
-	appLog.Infof("Returning drift count: %d", cnt)
+	appLog.Infof("Record count: %d", cnt)
 	return entries, nil
 }
 

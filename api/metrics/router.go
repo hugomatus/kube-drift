@@ -1,4 +1,4 @@
-package drift
+package metrics
 
 import (
 	"fmt"
@@ -11,9 +11,10 @@ import (
 
 // APIRouter defines the usable API routes
 func APIRouter(r *mux.Router, s *store.Store) {
-	r.Path("/{kind}").HandlerFunc(driftHandler(s))
-	r.Path("/{kind}/{namespace}").HandlerFunc(driftHandler(s))
-	r.Path("/{kind}/{namespace}/{template-hash}").HandlerFunc(driftHandler(s))
+	r.Path("/{name}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/{name}/{namespace}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/{name}/{namespace}/{podname}").HandlerFunc(cadvisorHandler(s))
+	r.Path("/{name}/{namespace}/{podname}/{metric}").HandlerFunc(cadvisorHandler(s))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 

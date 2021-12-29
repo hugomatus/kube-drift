@@ -71,7 +71,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
-	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
+	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Hour, "The resolution at which metrics-scraper will poll metrics.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
 
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -100,7 +100,14 @@ func main() {
 	}()
 
 	//Metrics Scraper: metrics/cadvisor
-	go scraper.Start(getKubernetesClient(), metricResolution, store)
+	go func() {
+		setupLog.Info("Start Scraper::ListenAndServe on port 8001")
+		c := getKubernetesClient()
+		//first scrape
+		scraper.Scrape(c, store)
+		//then start the scraper and scrape @ metricResolution
+		scraper.Start(c, metricResolution, store)
+	}()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -162,6 +169,8 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
+	scraper.Start(getKubernetesClient(), metricResolution, store)
 }
 
 func getKubernetesClient() *kubernetes.Clientset {

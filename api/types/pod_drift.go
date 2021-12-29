@@ -156,8 +156,6 @@ func GetContainerStatus(p *v1.Pod) []*DriftMetric {
 			state = "waiting"
 		} else if cs.State.Terminated != nil {
 			state = "terminated"
-		} else if cs.State.Terminated != nil {
-			state = "unknown"
 		}
 
 		if cs.State.Running != nil {

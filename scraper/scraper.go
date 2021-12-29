@@ -24,13 +24,13 @@ func Start(c *kubernetes.Clientset, r time.Duration, s *data.Store) {
 			return
 
 		case <-ticker.C:
-			scrape(c, s)
+			Scrape(c, s)
 		}
 	}
 }
 
 // scrape each node in the cluster for stats/summary
-func scrape(c *kubernetes.Clientset, s *data.Store) {
+func Scrape(c *kubernetes.Clientset, s *data.Store) {
 
 	nodeList, err := c.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items

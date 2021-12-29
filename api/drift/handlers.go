@@ -11,21 +11,7 @@ import (
 func driftHandler(s *store.Store) func(http.ResponseWriter, *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
-		vars := mux.Vars(r)
-
-		kind := vars["kind"]
-		namespace := vars["namespace"]
-		templateHash := vars["template-hash"]
-
-		prefix := fmt.Sprintf("/%s/%s", kind, namespace)
-
-		if namespace == "" {
-			prefix = fmt.Sprintf("/%s", kind)
-		}
-
-		if namespace != "" && templateHash != "" {
-			prefix = fmt.Sprintf("/%s/%s/%s", kind, namespace, templateHash)
-		}
+		prefix := handleDriftVars(r)
 
 		appLog.Infof("driftHandler: %v", prefix)
 		resp, err := s.GetByKeyPrefix(prefix)
@@ -54,4 +40,23 @@ func driftHandler(s *store.Store) func(http.ResponseWriter, *http.Request) {
 	}
 
 	return fn
+}
+
+func handleDriftVars(r *http.Request) string {
+	vars := mux.Vars(r)
+
+	kind := vars["kind"]
+	namespace := vars["namespace"]
+	templateHash := vars["template-hash"]
+
+	prefix := fmt.Sprintf("/%s/%s", kind, namespace)
+
+	if namespace == "" {
+		prefix = fmt.Sprintf("/%s", kind)
+	}
+
+	if namespace != "" && templateHash != "" {
+		prefix = fmt.Sprintf("/%s/%s/%s", kind, namespace, templateHash)
+	}
+	return prefix
 }
