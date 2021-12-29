@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/hugomatus/kube-drift/api/types"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
@@ -62,28 +61,14 @@ func (s *Store) Save(k string, data []byte) error {
 	return nil
 }
 
-// GetDriftByKey returns the drift value for a given key
-func (s *Store) GetDriftByKey(k string) (interface{}, error) {
-
-	drift := &types.PodDrift{}
-	data, err := s.db.Get([]byte(k), nil)
-	if err != nil {
-		return drift, err
-	}
-
-	err = json.Unmarshal(data, &drift)
-
-	return drift, nil
-}
-
-// GetDriftByKeyPrefix returns the drift(s) value for a given key prefix
-func (s *Store) GetDriftByKeyPrefix(k string) ([]byte, error) {
+// GetByKeyPrefix returns the drift(s) value for a given key prefix
+func (s *Store) GetByKeyPrefix(k string) ([]byte, error) {
 	appLog.Infof("get drift by key prefix: %s", k)
 	var iter iterator.Iterator
 
 	iter = s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
 
-	drifts, err := s.getDrifts(iter)
+	drifts, err := s.getRecords(iter)
 	if err != nil {
 		appLog.Errorf("error getting drift: %s", err)
 		return drifts, err
@@ -99,7 +84,7 @@ func (s *Store) GetDriftByKeyPrefix(k string) ([]byte, error) {
 	return drifts, nil
 }
 
-func (s *Store) getDrifts(i iterator.Iterator) ([]byte, error) {
+func (s *Store) getRecords(i iterator.Iterator) ([]byte, error) {
 	var entries []byte
 	cnt := 0
 

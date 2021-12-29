@@ -6,6 +6,13 @@ import (
 
 type MetricLabels map[string]int
 
+const (
+	// LabelNameLabel is the label name for the metric name.
+	LabelNameLabel = model.LabelName("__name__")
+	// LabelInstanceLabel is the label name for the metric instance.
+	LabelInstanceLabel = model.LabelName("instance")
+)
+
 var MetricLabel = MetricLabels{
 	//cpu
 	"container_cpu_user_seconds_total":   0,

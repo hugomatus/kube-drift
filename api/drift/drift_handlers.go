@@ -28,7 +28,7 @@ func driftHandler(s *store.Store) func(http.ResponseWriter, *http.Request) {
 		}
 
 		appLog.Infof("driftHandler: %v", prefix)
-		resp, err := s.GetDriftByKeyPrefix(prefix)
+		resp, err := s.GetByKeyPrefix(prefix)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
