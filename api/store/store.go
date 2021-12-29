@@ -112,8 +112,8 @@ func (s *Store) getDrifts(i iterator.Iterator) ([]byte, error) {
 	return entries, nil
 }
 
-// GetMetrics returns the metrics for a given key prefix
-func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
+// GetMetricSamples returns the metrics for a given key prefix
+func (s *Store) GetMetricSamples(k string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0
@@ -156,19 +156,26 @@ func (s *Store) SaveMetrics(d map[string][]byte) (string, error) {
 	var prefix string
 	var cnt int
 
-	//for each node key: nodeName, value: []byte
+	//for each node (n) key: nodeName, value (v): []byte
 	for n, v := range d {
 		resp, err := DecodeResponse(v)
 		if err != nil {
-			err = errors.Wrap(err, "failed to decode response")
+			err = errors.Wrap(err, "failed to decode ms metric response")
 			appLog.Error(err)
 			return "", err
 		}
-		for _, sample := range resp {
-			if MetricLabel.IsValid(*sample) {
-				key := getUniqueKey()
-				d, _ := sample.MarshalJSON()
-				prefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", n, string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"], key)
+		//for each model.Sample (ms) key: metricName, value: []byte
+		for _, ms := range resp {
+			if MetricLabel.IsValid(*ms) {
+				z := getUniqueKey()
+				d, err := ms.MarshalJSON()
+				if err != nil {
+					err = errors.Wrap(err, "failed to marshal ms metric")
+					appLog.Error(err)
+					return "", err
+				}
+
+				prefix = fmt.Sprintf("/%s/%s/%v", n, getPartialPrefix(ms), z)
 
 				err = s.Save(prefix, d)
 				if err != nil {
@@ -219,4 +226,9 @@ func getUniqueKey() string {
 	h.Write([]byte(time.Now().String()))
 	key := hex.EncodeToString(h.Sum(nil))
 	return key
+}
+
+func getPartialPrefix(sample *model.Sample) string {
+	prefix := fmt.Sprintf("%s/%s/%s/%s", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
+	return prefix
 }

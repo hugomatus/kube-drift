@@ -15,7 +15,7 @@ func cadvisorHandler(s *store.Store) http.HandlerFunc {
 		prefixKey := handleVars(r)
 
 		appLog.Infof("cadvisorHandler: %s", prefixKey)
-		resp, err := s.GetMetrics(prefixKey)
+		resp, err := s.GetMetricSamples(prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
