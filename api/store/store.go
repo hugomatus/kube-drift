@@ -2,13 +2,17 @@ package store
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/hugomatus/kube-drift/api/types"
+	"github.com/pkg/errors"
 	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"hash/fnv"
 	"io"
 	appLog "k8s.io/klog/v2"
 	"strings"
@@ -108,36 +112,6 @@ func (s *Store) getDrifts(i iterator.Iterator) ([]byte, error) {
 	return entries, nil
 }
 
-// DecodeResponse decodes the response from the prometheus samples
-func DecodeResponse(d []byte) ([]*model.Sample, error) {
-
-	ioReaderData := strings.NewReader(string(d))
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(ioReaderData)
-
-	if err != nil {
-		return nil, err
-	}
-	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
-	decoder := expfmt.SampleDecoder{
-		Dec:  dec,
-		Opts: &expfmt.DecodeOptions{},
-	}
-
-	var samples []*model.Sample
-	for {
-		var v model.Vector
-		if err := decoder.Decode(&v); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		samples = append(samples, v...)
-	}
-	return samples, nil
-}
-
 // GetMetrics returns the metrics for a given key prefix
 func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
 	var results []*model.Sample
@@ -174,4 +148,75 @@ func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
 	}
 
 	return results, nil
+}
+
+// SaveMetrics saves the metric samples to the database
+func (s *Store) SaveMetrics(d map[string][]byte) (string, error) {
+
+	var prefix string
+	var cnt int
+
+	//for each node key: nodeName, value: []byte
+	for n, v := range d {
+		resp, err := DecodeResponse(v)
+		if err != nil {
+			err = errors.Wrap(err, "failed to decode response")
+			appLog.Error(err)
+			return "", err
+		}
+		for _, sample := range resp {
+			if MetricLabel.IsValid(*sample) {
+				key := getUniqueKey()
+				d, _ := sample.MarshalJSON()
+				prefix = fmt.Sprintf("/%s/%s/%s/%s/%s/%v", n, string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"], key)
+
+				err = s.Save(prefix, d)
+				if err != nil {
+					err = errors.Wrap(err, "failed to save metrics scrape record")
+					appLog.Error(err)
+				}
+				cnt++
+			}
+		}
+	}
+	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", cnt))
+	return prefix, nil
+}
+
+// DecodeResponse decodes the response from the prometheus samples
+func DecodeResponse(d []byte) ([]*model.Sample, error) {
+
+	ioReaderData := strings.NewReader(string(d))
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(ioReaderData)
+
+	if err != nil {
+		return nil, err
+	}
+	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
+	decoder := expfmt.SampleDecoder{
+		Dec:  dec,
+		Opts: &expfmt.DecodeOptions{},
+	}
+
+	var samples []*model.Sample
+	for {
+		var v model.Vector
+		if err := decoder.Decode(&v); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		samples = append(samples, v...)
+	}
+	return samples, nil
+}
+
+func getUniqueKey() string {
+	h := fnv.New64a()
+	// Hash of Timestamp
+	h.Write([]byte(time.Now().String()))
+	key := hex.EncodeToString(h.Sum(nil))
+	return key
 }
