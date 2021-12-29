@@ -67,7 +67,7 @@ func scrape(c *kubernetes.Clientset, s *data.Store) {
 			continue
 		}
 
-		_, err := s.SaveMetrics(d)
+		_, err := s.SaveMetricSamples(d)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")

@@ -150,8 +150,8 @@ func (s *Store) GetMetricSamples(k string) ([]*model.Sample, error) {
 	return results, nil
 }
 
-// SaveMetrics saves the metric samples to the database
-func (s *Store) SaveMetrics(d map[string][]byte) (string, error) {
+// SaveMetricSamples saves the metric samples to the database
+func (s *Store) SaveMetricSamples(d map[string][]byte) (string, error) {
 
 	var prefix string
 	var cnt int

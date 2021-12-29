@@ -43,13 +43,13 @@ func driftHandler(s *store.Store) func(http.ResponseWriter, *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			_, err := w.Write([]byte(fmt.Sprintf("JSON Error - %v", err)))
 			if err != nil {
-				//fmt.Printf("Error cannot write response: %v", err)
+				appLog.Errorf("Error cannot write response: %v", err)
 			}
 		}
 
 		_, err = w.Write(resp)
 		if err != nil {
-			fmt.Printf("Error cannot write response: %v", err)
+			appLog.Errorf("Error cannot write response: %v", err)
 		}
 	}
 

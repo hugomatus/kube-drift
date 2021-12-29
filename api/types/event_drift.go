@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
+	appLog "k8s.io/klog/v2"
 	"strconv"
 	"time"
 )
@@ -77,7 +78,7 @@ func GetInvolvedObject(e *v1.Event) *DriftMetric {
 func (d *EventDrift) Marshal() []byte {
 	j, err := json.Marshal(d)
 	if err != nil {
-		fmt.Println(err)
+		appLog.Error(err)
 	}
 	return j
 }

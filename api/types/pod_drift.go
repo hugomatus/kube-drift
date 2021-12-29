@@ -7,6 +7,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strconv"
+	appLog "k8s.io/klog/v2"
 )
 
 type KubeDrift interface {
@@ -242,7 +243,7 @@ func getResources(p *v1.Pod, resourceName v1.ResourceName, dm []*DriftMetric, c 
 func (d *PodDrift) Marshal() []byte {
 	j, err := json.Marshal(d)
 	if err != nil {
-		fmt.Println(err)
+		appLog.Error(err)
 	}
 	return j
 }
