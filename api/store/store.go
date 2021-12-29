@@ -152,6 +152,7 @@ func (s *Store) SaveMetricSamples(d map[string][]byte) (string, error) {
 		//for each model.Sample (ms) key: metricName, value: []byte
 		for _, ms := range resp {
 			if MetricLabel.IsValid(*ms) {
+				//appLog.Infof("metric: %s", time.UnixMilli(ms.Timestamp.UnixNano()/int64(time.Millisecond)))
 				z := getUniqueKey()
 				d, err := ms.MarshalJSON()
 				if err != nil {
