@@ -25,12 +25,10 @@ import (
 	"github.com/hugomatus/kube-drift/scraper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/component-base/logs"
 	appLog "k8s.io/klog/v2"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -71,7 +69,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
-	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Hour, "The resolution at which metrics-scraper will poll metrics.")
+	flag.DurationVar(&metricResolution, "metric-resolution", 60*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
 
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -175,14 +173,14 @@ func main() {
 
 func getKubernetesClient() *kubernetes.Clientset {
 
-	var c string
+/*	var c string
 	if home := homedir.HomeDir(); home != "" {
 		c = filepath.Join(home, ".kube", "config")
 	} else {
 		c = ""
-	}
+	}*/
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", c)
+	cfg, err := clientcmd.BuildConfigFromFlags("", "")
 	if err != nil {
 		appLog.Fatalf("Unable to generate a client cfg: %s", err)
 	}
