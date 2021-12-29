@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
 	"github.com/hugomatus/kube-drift/api/store"
+	"github.com/hugomatus/kube-drift/scraper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -85,6 +86,7 @@ func main() {
 	store := &store.Store{}
 	store.New(dbStoragePath)
 
+	//API Server
 	go func() {
 		setupLog.Info("Start API Server::ListenAndServe on port 8001")
 		r := mux.NewRouter()
@@ -97,8 +99,12 @@ func main() {
 		}
 	}()
 
+	//Metrics Scraper: metrics/cadvisor
+	go scraper.Start(GetKubernetesClient(), metricResolution, store)
+
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	//finalize setup for the controller
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -115,7 +121,7 @@ func main() {
 	if err = (&controllers.PodReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store, metricResolution, GetKubernetesClient()); err != nil {
+	}).SetupWithManager(mgr, store); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Pod")
 		os.Exit(1)
 	}

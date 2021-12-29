@@ -20,15 +20,12 @@ import (
 	"context"
 	"github.com/hugomatus/kube-drift/api/store"
 	"github.com/hugomatus/kube-drift/api/types"
-	"github.com/hugomatus/kube-drift/scraper"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	appLog "k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
 
 // PodReconciler reconciles a Pod object
@@ -70,7 +67,7 @@ func (r *PodReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.R
 func (r *PodReconciler) HandleProcessing(pod corev1.Pod) error {
 	d := types.PodDrift{}
 	d_ := (d.NewKubeDrift(pod)).(types.PodDrift)
-	//o := d_.(provider.PodDrift)
+
 	err := r.store.Save(d_.GetKey(), d_.Marshal())
 	if err != nil {
 		appLog.Errorf("Failed to save event d: with key %s\n%v", d_.Key, err)
@@ -80,11 +77,9 @@ func (r *PodReconciler) HandleProcessing(pod corev1.Pod) error {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager, store *store.Store, res time.Duration, clientSet *kubernetes.Clientset) error {
+func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager, store *store.Store) error {
 
 	r.store = store
-
-	go scraper.Start(clientSet, res, r.store)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Pod{}).
