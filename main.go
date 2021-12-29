@@ -100,7 +100,7 @@ func main() {
 	}()
 
 	//Metrics Scraper: metrics/cadvisor
-	go scraper.Start(GetKubernetesClient(), metricResolution, store)
+	go scraper.Start(getKubernetesClient(), metricResolution, store)
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -164,27 +164,27 @@ func main() {
 	}
 }
 
-func GetKubernetesClient() *kubernetes.Clientset {
+func getKubernetesClient() *kubernetes.Clientset {
 
-	var config string
+	var c string
 	if home := homedir.HomeDir(); home != "" {
-		config = filepath.Join(home, ".kube", "config")
+		c = filepath.Join(home, ".kube", "c")
 	} else {
-		config = ""
+		c = ""
 	}
 
-	restConfig, err := clientcmd.BuildConfigFromFlags("", config)
+	restConfig, err := clientcmd.BuildConfigFromFlags("", c)
 	if err != nil {
 		appLog.Fatalf("Unable to generate a client restConfig: %s", err)
 	}
 	appLog.Infof("Kubernetes host: %s", restConfig.Host)
 
-	// create k8 clientset
-	clientset, err := kubernetes.NewForConfig(restConfig)
+	// create k8 client
+	client, err := kubernetes.NewForConfig(restConfig)
 
 	if err != nil {
-		appLog.Fatalf("Unable to generate a clientset: %s", err)
+		appLog.Fatalf("Unable to generate a client: %s", err)
 	}
 
-	return clientset
+	return client
 }
