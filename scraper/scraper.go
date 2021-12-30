@@ -18,9 +18,11 @@ type Scraper struct {
 	Endpoint  string
 }
 
-func (s *Scraper) Start() {
+func (s *Scraper) Run() {
+	// First scrape run to seed the store
+	s.scrape()
 
-	//Scrape @ every r (metric resolution)
+	// Scrape @ every r (metric resolution)
 	ticker := time.NewTicker(s.Frequency)
 	quit := make(chan struct{})
 
@@ -31,13 +33,13 @@ func (s *Scraper) Start() {
 			return
 
 		case <-ticker.C:
-			s.Scrape()
+			s.scrape()
 		}
 	}
 }
 
 // Scrape each node in the cluster for stats/summary
-func (s *Scraper) Scrape() {
+func (s *Scraper) scrape() {
 
 	nodeList, err := s.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items

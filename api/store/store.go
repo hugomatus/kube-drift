@@ -25,8 +25,8 @@ type Store struct {
 	window time.Duration
 }
 
-// New creates a new Store.
-func (s *Store) New(path string) error {
+// Init creates a new Store.
+func (s *Store) Init(path string) error {
 	db, err := leveldb.OpenFile(path, nil)
 
 	if err != nil {

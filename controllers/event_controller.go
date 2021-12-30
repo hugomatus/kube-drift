@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"context"
-	store3 "github.com/hugomatus/kube-drift/api/store"
+	store "github.com/hugomatus/kube-drift/api/store"
 	"github.com/hugomatus/kube-drift/api/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,7 +32,7 @@ import (
 type EventReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	store  *store3.Store
+	store  *store.Store
 }
 
 //+kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
@@ -77,7 +77,7 @@ func (r *EventReconciler) HandleProcessing(event corev1.Event) error {
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *store3.Store) error {
+func (r *EventReconciler) SetupWithManager(mgr ctrl.Manager, store *store.Store) error {
 	r.store = store
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.Event{}).

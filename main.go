@@ -21,7 +21,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
-	"github.com/hugomatus/kube-drift/api/store"
+	store "github.com/hugomatus/kube-drift/api/store"
 	"github.com/hugomatus/kube-drift/scraper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -84,37 +84,36 @@ func main() {
 	flag.Parse()
 
 	//create datastore
-	store := &store.Store{}
-	store.New(dbStoragePath)
+	s := &store.Store{}
+	s.Init(dbStoragePath)
 
 	//API Server
-	go func() {
-		setupLog.Info("Start API Server::ListenAndServe on port 8001")
+	go func(s *store.Store) {
+		setupLog.Info("Run API Server::ListenAndServe on port 8001")
 		r := mux.NewRouter()
-		api.Manager(r, store)
+		api.Manager(r, s)
 		// Bind to a port and pass our router in
 		err := http.ListenAndServe(":8001", handlers.CombinedLoggingHandler(os.Stdout, r))
 
 		if err != nil {
 			setupLog.Error(err, "Error starting server")
 		}
-	}()
+	}(s)
 
 	//Metrics Scraper: metrics/cadvisor
-	go func() {
-		setupLog.Info("Start Scraper::ListenAndServe on port 8001")
+	go func(store *store.Store) {
+		setupLog.Info("Run Scraper::ListenAndServe on port 8001")
 
-		s := scraper.Scraper{
+		z := scraper.Scraper{
 			Client:    getKubernetesClient(),
-			Store:     store,
+			Store:     s,
 			Frequency: metricResolution,
 			Endpoint:  "metrics/cadvisor",
 		}
-		//first scrape
-		s.Scrape()
-		//then start the scraper and scrape @ metricResolution
-		s.Start()
-	}()
+
+		// Run the scraper and scrape @ metricResolution
+		z.Run()
+	}(s)
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
@@ -135,21 +134,21 @@ func main() {
 	if err = (&controllers.PodReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store); err != nil {
+	}).SetupWithManager(mgr, s); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Pod")
 		os.Exit(1)
 	}
 	if err = (&controllers.EventReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store); err != nil {
+	}).SetupWithManager(mgr, s); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Event")
 		os.Exit(1)
 	}
 	if err = (&controllers.NodeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store); err != nil {
+	}).SetupWithManager(mgr, s); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Node")
 		os.Exit(1)
 	}
@@ -157,7 +156,7 @@ func main() {
 	if err = (&controllers.DeploymentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr, store); err != nil {
+	}).SetupWithManager(mgr, s); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Deployment")
 		os.Exit(1)
 	}
@@ -181,12 +180,12 @@ func main() {
 
 func getKubernetesClient() *kubernetes.Clientset {
 
-/*	var c string
+	var c string
 	if home := homedir.HomeDir(); home != "" {
 		c = filepath.Join(home, ".kube", "config")
 	} else {
 		c = ""
-	}*/
+	}
 
 	cfg, err := clientcmd.BuildConfigFromFlags("", c)
 	if err != nil {
