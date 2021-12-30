@@ -62,6 +62,7 @@ func init() {
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -86,8 +87,9 @@ func main() {
 	//create datastore
 	s := &store.Store{}
 	s.Init(dbStoragePath)
+	defer s.Close()
 
-	//API Server
+	// API Server
 	go func(s *store.Store) {
 		setupLog.Info("Run API Server::ListenAndServe on port 8001")
 		r := mux.NewRouter()
@@ -100,7 +102,7 @@ func main() {
 		}
 	}(s)
 
-	//Metrics Scraper: metrics/cadvisor
+	// Metrics Scraper
 	go func(store *store.Store) {
 		setupLog.Info("Run Scraper::ListenAndServe on port 8001")
 
