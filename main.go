@@ -117,9 +117,9 @@ func main() {
 		z.Run()
 	}(s)
 
+	// Kubernetes Operator setup
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	//finalize setup for the controller
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
