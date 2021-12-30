@@ -3,16 +3,16 @@ package scraper
 import (
 	"context"
 	data "github.com/hugomatus/kube-drift/api/store"
+	"github.com/hugomatus/kube-drift/client"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	appLog "k8s.io/klog/v2"
 	"time"
 )
 
 type Scraper struct {
-	Client    *kubernetes.Clientset
+	Config    *client.Config
 	Store     *data.Store
 	Frequency time.Duration
 	Endpoint  string
@@ -41,7 +41,7 @@ func (s *Scraper) Run() {
 // Scrape each node in the cluster for stats/summary
 func (s *Scraper) scrape() {
 
-	nodeList, err := s.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := s.Config.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Scraper) scrape() {
 
 		go func(node corev1.Node) {
 
-			req := s.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(s.Endpoint)
+			req := s.Config.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(s.Endpoint)
 			resp, err := req.DoRaw(context.Background())
 
 			if err != nil {

@@ -22,15 +22,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api"
 	store "github.com/hugomatus/kube-drift/api/store"
+	"github.com/hugomatus/kube-drift/client"
 	"github.com/hugomatus/kube-drift/scraper"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/component-base/logs"
-	appLog "k8s.io/klog/v2"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -106,8 +102,11 @@ func main() {
 	go func(store *store.Store) {
 		setupLog.Info("Run Scraper::ListenAndServe on port 8001")
 
+		c := new(client.Config)
+		c.Init(false)
+
 		z := scraper.Scraper{
-			Client:    getKubernetesClient(),
+			Config:    c,
 			Store:     s,
 			Frequency: metricResolution,
 			Endpoint:  "metrics/cadvisor",
@@ -178,29 +177,4 @@ func main() {
 		os.Exit(1)
 	}
 
-}
-
-func getKubernetesClient() *kubernetes.Clientset {
-
-	var c string
-	if home := homedir.HomeDir(); home != "" {
-		c = filepath.Join(home, ".kube", "config")
-	} else {
-		c = ""
-	}
-
-	cfg, err := clientcmd.BuildConfigFromFlags("", c)
-	if err != nil {
-		appLog.Fatalf("Unable to generate a client cfg: %s", err)
-	}
-	appLog.Infof("Kubernetes host: %s", cfg.Host)
-
-	// create k8 client
-	client, err := kubernetes.NewForConfig(cfg)
-
-	if err != nil {
-		appLog.Fatalf("Unable to generate a client: %s", err)
-	}
-
-	return client
 }
