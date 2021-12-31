@@ -2,12 +2,10 @@ package store
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"hash/fnv"
 	appLog "k8s.io/klog/v2"
@@ -59,76 +57,26 @@ func (s *Store) Save(k string, data []byte) error {
 
 // GetByKeyPrefix returns the drift(s) value for a given key prefix
 func (s *Store) GetByKeyPrefix(k string) ([]byte, error) {
-
-	appLog.Infof("get drift by key prefix: %s", k)
+	var entries []byte
+	cnt := 0
+	appLog.Infof("Get record by key prefix: %s", k)
 
 	iter := s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
 
-	drifts, err := s.getRecords(iter)
-	if err != nil {
-		appLog.Errorf("error getting drift: %s", err)
-		return drifts, err
+	for iter.Next() {
+		entries = append(entries, iter.Value()...)
+		cnt++
 	}
 
 	// release
 	iter.Release()
-	err = iter.Error()
+	err := iter.Error()
 	if err != nil {
 		appLog.Errorf("error releasing iterator: %s", err)
 		return nil, err
 	}
-	return drifts, nil
-}
-
-func (s *Store) getRecords(i iterator.Iterator) ([]byte, error) {
-	var entries []byte
-	cnt := 0
-
-	for i.Next() {
-		entries = append(entries, i.Value()...)
-		cnt++
-	}
-
-	appLog.Infof("Record count: %d", cnt)
-	return entries, nil
-}
-
-// GetMetrics returns the metrics for a given key prefix
-func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
-	var results []*model.Sample
-	var iter iterator.Iterator
-	cnt := 0
-
-	if len(k) > 0 {
-		iter = s.db.NewIterator(util.BytesPrefix([]byte(k)), nil)
-
-	} else {
-		iter = s.db.NewIterator(nil, nil)
-	}
-
-	for iter.Next() {
-		result := model.Sample{}
-		err := json.Unmarshal(iter.Value(), &result)
-
-		if err != nil {
-			appLog.Error(err)
-			return nil, err
-		}
-		results = append(results, &result)
-		cnt++
-	}
-
 	appLog.Infof("Status: Retrieved %d records from store", cnt)
-
-	//release
-	iter.Release()
-	err := iter.Error()
-	if err != nil {
-		appLog.Error(err)
-		return nil, err
-	}
-
-	return results, nil
+	return entries, nil
 }
 
 // SaveMetrics saves the metric samples to the database
@@ -143,7 +91,7 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 		for _, ms := range v {
 			if MetricLabel.IsValid(*ms) {
 				//appLog.Infof("metric: %s", time.UnixMilli(ms.Timestamp.UnixNano()/int64(time.Millisecond)))
-				z := getUniqueKey()
+				z := getUniqueKey(ms)
 				d, err := ms.MarshalJSON()
 				if err != nil {
 					err = errors.Wrap(err, "failed to marshal ms metric")
@@ -151,7 +99,8 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 					return "", err
 				}
 
-				prefix = fmt.Sprintf("/%s/%s/%v", n, getPartialPrefix(ms), z)
+				prefix = fmt.Sprintf("/%s/%s", n, z)
+				appLog.Infof("Key: %s", prefix)
 
 				err = s.Save(prefix, d)
 				if err != nil {
@@ -166,11 +115,14 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 	return prefix, nil
 }
 
-func getUniqueKey() string {
+func getUniqueKey(sample *model.Sample) string {
 	h := fnv.New64a()
 	// Hash of Timestamp
 	h.Write([]byte(time.Now().String()))
 	key := hex.EncodeToString(h.Sum(nil))
+
+	prefix := fmt.Sprintf("%s/%s/%s/%s", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
+	key = fmt.Sprintf("%s/%v", prefix, key)
 	return key
 }
 

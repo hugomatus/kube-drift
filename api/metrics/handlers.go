@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/hugomatus/kube-drift/api/store"
@@ -15,27 +14,15 @@ func metricsHandler(s *store.Store) http.HandlerFunc {
 		prefixKey := handleVars(r)
 
 		appLog.Infof("metricsHandler: %s", prefixKey)
-		resp, err := s.GetMetrics(prefixKey)
+		resp, err := s.GetByKeyPrefix(prefixKey)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, err := w.Write([]byte(fmt.Sprintf("Node Metrics Error - %v", err.Error())))
-			if err != nil {
-				appLog.Errorf("Error cannot write response: %v", err)
-			}
-		}
+		w.WriteHeader(http.StatusOK)
 
-		j, err := json.Marshal(resp)
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, err := w.Write([]byte(fmt.Sprintf("JSON Error - %v", err.Error())))
-			if err != nil {
-				appLog.Errorf("Error cannot write response: %v", err)
-			}
-		}
-
-		_, err = w.Write(j)
+		_, err = w.Write(resp)
 		if err != nil {
 			appLog.Errorf("Error cannot write response: %v", err)
 		}
