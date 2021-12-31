@@ -162,7 +162,7 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 			}
 		}
 	}
-	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", cnt))
+	appLog.Infof(fmt.Sprintf("saved %v metric samples", cnt))
 	return prefix, nil
 }
 
