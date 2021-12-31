@@ -71,12 +71,12 @@ func (s *Scraper) scrape() {
 	}
 
 	for range nodes {
-		d := <-q
-		if d == nil {
+		data := <-q
+		if data == nil {
 			continue
 		}
 
-		_, err := s.Store.SaveMetrics(d)
+		_, err := s.Store.SaveMetrics(data)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")
