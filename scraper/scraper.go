@@ -13,7 +13,7 @@ import (
 )
 
 type Scraper struct {
-	Client    *client.Client
+	Client    *client.MetricsClient
 	Store     *data.Store
 	Frequency time.Duration
 	Endpoint  string
@@ -42,7 +42,7 @@ func (s *Scraper) Run() {
 // Scrape each node in the cluster for stats/summary
 func (s *Scraper) scrape() {
 
-	nodeList, err := s.Client.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := s.Client.Clientset.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {

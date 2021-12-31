@@ -9,12 +9,12 @@ import (
 	"net/http"
 )
 
-func cadvisorHandler(s *store.Store) http.HandlerFunc {
+func metricsHandler(s *store.Store) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
 		prefixKey := handleVars(r)
 
-		appLog.Infof("cadvisorHandler: %s", prefixKey)
+		appLog.Infof("metricsHandler: %s", prefixKey)
 		resp, err := s.GetMetrics(prefixKey)
 		w.Header().Set("Content-Type", "application/json")
 		if err != nil {

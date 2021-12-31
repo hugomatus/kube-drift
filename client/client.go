@@ -12,13 +12,26 @@ import (
 	"strings"
 )
 
-type Client struct {
-	Client *kubernetes.Clientset
+type Client interface {
+	Init()
+	GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample, error)
+	DecodeResponse(d []byte) ([]*model.Sample, error)
 }
 
-func (c *Client) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample, error) {
+type MetricsClient struct {
+	config    *Config
+	Clientset *kubernetes.Clientset
+}
 
-	req := c.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(endpoint)
+func (c *MetricsClient) Init(inCluster bool) {
+	c.config = &Config{}
+	c.config.Init(inCluster)
+	c.Clientset = c.config.Client
+}
+
+func (c *MetricsClient) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample, error) {
+
+	req := c.Clientset.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(endpoint)
 
 	resp, err := req.DoRaw(context.Background())
 	if err != nil {
@@ -26,7 +39,7 @@ func (c *Client) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample,
 		return nil, err
 	}
 
-	resp_, err := c.decodeResponse(resp)
+	resp_, err := c.DecodeResponse(resp)
 	if err != nil {
 		appLog.Errorf("Error decoding response: %v", err)
 		return nil, err
@@ -35,7 +48,7 @@ func (c *Client) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample,
 }
 
 // DecodeResponse decodes the response from the prometheus samples
-func (c *Client) decodeResponse(d []byte) ([]*model.Sample, error) {
+func (c *MetricsClient) DecodeResponse(d []byte) ([]*model.Sample, error) {
 
 	ioReaderData := strings.NewReader(string(d))
 	buf := new(bytes.Buffer)
