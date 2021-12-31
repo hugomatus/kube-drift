@@ -21,17 +21,19 @@ type Client interface {
 type MetricsClient struct {
 	config    *Config
 	Clientset *kubernetes.Clientset
+	Endpoint  string
 }
 
-func (c *MetricsClient) Init(inCluster bool) {
+func (c *MetricsClient) Init(inCluster bool, endpoint string) {
+	c.Endpoint = endpoint
 	c.config = &Config{}
 	c.config.Init(inCluster)
 	c.Clientset = c.config.Client
 }
 
-func (c *MetricsClient) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample, error) {
+func (c *MetricsClient) GetMetrics(node corev1.Node /*, endpoint string*/) ([]*model.Sample, error) {
 
-	req := c.Clientset.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(endpoint)
+	req := c.Clientset.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(c.Endpoint)
 
 	resp, err := req.DoRaw(context.Background())
 	if err != nil {

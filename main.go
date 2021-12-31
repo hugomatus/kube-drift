@@ -106,13 +106,13 @@ func main() {
 		setupLog.Info("Run Scraper::ListenAndServe on port 8001")
 
 		c := &client.MetricsClient{}
-		c.Init(false)
+		c.Init(false, endpoint)
 
 		z := scraper.Scraper{
-			Client:    c,
-			Store:     s,
-			Frequency: metricResolution,
-			Endpoint:  endpoint,
+			MetricsClient: c,
+			Store:         s,
+			Frequency:     metricResolution,
+			Endpoint:      endpoint,
 		}
 
 		// Run the scraper and scrape @ metricResolution

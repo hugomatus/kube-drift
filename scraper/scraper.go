@@ -13,10 +13,10 @@ import (
 )
 
 type Scraper struct {
-	Client    *client.MetricsClient
-	Store     *data.Store
-	Frequency time.Duration
-	Endpoint  string
+	MetricsClient *client.MetricsClient
+	Store         *data.Store
+	Frequency     time.Duration
+	Endpoint      string
 }
 
 func (s *Scraper) Run() {
@@ -42,7 +42,7 @@ func (s *Scraper) Run() {
 // Scrape each node in the cluster for stats/summary
 func (s *Scraper) scrape() {
 
-	nodeList, err := s.Client.Clientset.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := s.MetricsClient.Clientset.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *Scraper) scrape() {
 
 		go func(node corev1.Node) {
 
-			resp, err := s.Client.GetMetrics(node, s.Endpoint)
+			resp, err := s.MetricsClient.GetMetrics(node)
 			if err != nil {
 				err = errors.Wrap(err, "failed to scrape metrics")
 				appLog.Error(err)
