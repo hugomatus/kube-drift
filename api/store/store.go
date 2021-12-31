@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
@@ -11,6 +12,14 @@ import (
 	appLog "k8s.io/klog/v2"
 	"time"
 )
+
+type MetricSample struct {
+	Key   string    `json:"key"`
+	Name  string    `json:"name"`
+	Value string    `json:"value"`
+	Time  time.Time `json:"time"`
+	Batch string    `json:"batch"`
+}
 
 // Store is a wrapper around a LevelDB instance.
 type Store struct {
@@ -86,7 +95,9 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 	var cnt int
 
 	//for each node (n) key: nodeName, value (v): []byte
+	batchNo := getKeyHash()
 	for n, v := range d {
+
 		//for each model.Sample (ms) key: metricName, value: []byte
 		for _, ms := range v {
 			if MetricLabel.IsValid(*ms) {
@@ -107,7 +118,15 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 					appLog.Error(err)
 				}
 				cnt++
-				//err = s.Save(fmt.Sprintf("/key/%s", prefix), []byte(fmt.Sprintf("%s", prefix)))
+
+				kv := MetricSample{
+					Key:   prefix,
+					Name:  string(ms.Metric["__name__"]),
+					Value: ms.Value.String(),
+					Time:  time.Unix(0, ms.Timestamp.UnixNano()),
+					Batch: batchNo,
+				}
+				err = s.Save(fmt.Sprintf("/key/%s/%s", batchNo, prefix), kv.Marshal())
 			}
 		}
 	}
@@ -116,17 +135,31 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 }
 
 func getUniqueKey(sample *model.Sample) string {
-	h := fnv.New64a()
-	// Hash of Timestamp
-	h.Write([]byte(time.Now().String()))
-	key := hex.EncodeToString(h.Sum(nil))
+	key := getKeyHash()
 
 	prefix := fmt.Sprintf("%s/%s/%s/%s", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
 	key = fmt.Sprintf("%s/%v", prefix, key)
 	return key
 }
 
+func getKeyHash() string {
+	h := fnv.New64a()
+	// Hash of Timestamp
+	h.Write([]byte(time.Now().String()))
+	key := hex.EncodeToString(h.Sum(nil))
+	return key
+}
+
 func getPartialPrefix(sample *model.Sample) string {
 	prefix := fmt.Sprintf("%s/%s/%s/%s", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
 	return prefix
+}
+
+// Marshal key to json
+func (k *MetricSample) Marshal() []byte {
+	j, err := json.Marshal(k)
+	if err != nil {
+		appLog.Error(err)
+	}
+	return j
 }
