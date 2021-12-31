@@ -100,7 +100,6 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 				}
 
 				prefix = fmt.Sprintf("/%s/%s", n, z)
-				appLog.Infof("Key: %s", prefix)
 
 				err = s.Save(prefix, d)
 				if err != nil {
@@ -108,6 +107,7 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 					appLog.Error(err)
 				}
 				cnt++
+				//err = s.Save(fmt.Sprintf("/key/%s", prefix), []byte(fmt.Sprintf("%s", prefix)))
 			}
 		}
 	}
