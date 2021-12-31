@@ -31,7 +31,7 @@ func (c *MetricsClient) Init(inCluster bool, endpoint string) {
 	c.Clientset = c.config.Client
 }
 
-func (c *MetricsClient) GetMetrics(node corev1.Node /*, endpoint string*/) ([]*model.Sample, error) {
+func (c *MetricsClient) GetMetrics(node corev1.Node) ([]*model.Sample, error) {
 
 	req := c.Clientset.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(c.Endpoint)
 

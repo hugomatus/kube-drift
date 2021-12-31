@@ -21,4 +21,4 @@ kubectl expose deployment kube-drift-controller-manager -n kube-drift-system --t
 ```
 ## Drift API
 
-![demo](kube-drift-svc.png)
+![demo](assets/kube-drift-api.gif)
