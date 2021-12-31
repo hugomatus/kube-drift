@@ -1,20 +1,16 @@
 package store
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/model"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"hash/fnv"
-	"io"
 	appLog "k8s.io/klog/v2"
-	"strings"
 	"time"
 )
 
@@ -168,36 +164,6 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 	}
 	appLog.Infof(fmt.Sprintf("Total: Metric Sample Records=%v", cnt))
 	return prefix, nil
-}
-
-// DecodeResponse decodes the response from the prometheus samples
-func DecodeResponse(d []byte) ([]*model.Sample, error) {
-
-	ioReaderData := strings.NewReader(string(d))
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(ioReaderData)
-
-	if err != nil {
-		return nil, err
-	}
-	dec := expfmt.NewDecoder(buf, expfmt.FmtText)
-	decoder := expfmt.SampleDecoder{
-		Dec:  dec,
-		Opts: &expfmt.DecodeOptions{},
-	}
-
-	var samples []*model.Sample
-	for {
-		var v model.Vector
-		if err := decoder.Decode(&v); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		samples = append(samples, v...)
-	}
-	return samples, nil
 }
 
 func getUniqueKey() string {

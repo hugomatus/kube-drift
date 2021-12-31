@@ -21,7 +21,6 @@ func (c *Client) GetMetrics(node corev1.Node, endpoint string) ([]*model.Sample,
 	req := c.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(endpoint)
 
 	resp, err := req.DoRaw(context.Background())
-
 	if err != nil {
 		appLog.Errorf("Error getting metrics: %v", err)
 		return nil, err
