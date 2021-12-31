@@ -97,8 +97,8 @@ func (s *Store) getRecords(i iterator.Iterator) ([]byte, error) {
 	return entries, nil
 }
 
-// GetMetricSamples returns the metrics for a given key prefix
-func (s *Store) GetMetricSamples(k string) ([]*model.Sample, error) {
+// GetMetrics returns the metrics for a given key prefix
+func (s *Store) GetMetrics(k string) ([]*model.Sample, error) {
 	var results []*model.Sample
 	var iter iterator.Iterator
 	cnt := 0
@@ -135,22 +135,16 @@ func (s *Store) GetMetricSamples(k string) ([]*model.Sample, error) {
 	return results, nil
 }
 
-// SaveMetricSamples saves the metric samples to the database
-func (s *Store) SaveMetricSamples(d map[string][]byte) (string, error) {
+// SaveMetrics saves the metric samples to the database
+func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 
 	var prefix string
 	var cnt int
 
 	//for each node (n) key: nodeName, value (v): []byte
 	for n, v := range d {
-		resp, err := DecodeResponse(v)
-		if err != nil {
-			err = errors.Wrap(err, "failed to decode ms metric response")
-			appLog.Error(err)
-			return "", err
-		}
 		//for each model.Sample (ms) key: metricName, value: []byte
-		for _, ms := range resp {
+		for _, ms := range v {
 			if MetricLabel.IsValid(*ms) {
 				//appLog.Infof("metric: %s", time.UnixMilli(ms.Timestamp.UnixNano()/int64(time.Millisecond)))
 				z := getUniqueKey()

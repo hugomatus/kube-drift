@@ -5,6 +5,7 @@ import (
 	data "github.com/hugomatus/kube-drift/api/store"
 	"github.com/hugomatus/kube-drift/client"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appLog "k8s.io/klog/v2"
@@ -12,7 +13,7 @@ import (
 )
 
 type Scraper struct {
-	Config    *client.Config
+	Client    *client.Client
 	Store     *data.Store
 	Frequency time.Duration
 	Endpoint  string
@@ -41,7 +42,7 @@ func (s *Scraper) Run() {
 // Scrape each node in the cluster for stats/summary
 func (s *Scraper) scrape() {
 
-	nodeList, err := s.Config.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodeList, err := s.Client.Client.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
 
 	if err != nil {
@@ -49,24 +50,23 @@ func (s *Scraper) scrape() {
 		appLog.Error(err)
 	}
 
-	q := make(chan map[string][]byte, len(nodes))
+	q := make(chan map[string][]*model.Sample, len(nodes))
 	defer close(q)
 
 	for _, n := range nodes {
 
 		go func(node corev1.Node) {
 
-			req := s.Config.Client.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(s.Endpoint)
-			resp, err := req.DoRaw(context.Background())
-
+			resp, err := s.Client.GetMetrics(node, s.Endpoint)
 			if err != nil {
 				err = errors.Wrap(err, "failed to scrape metrics")
 				appLog.Error(err)
 			}
 
-			q <- map[string][]byte{
+			q <- map[string][]*model.Sample{
 				node.Name: resp,
 			}
+			appLog.Infof("scraped metrics for node %s", node.Name)
 		}(n)
 	}
 
@@ -76,7 +76,7 @@ func (s *Scraper) scrape() {
 			continue
 		}
 
-		_, err := s.Store.SaveMetricSamples(d)
+		_, err := s.Store.SaveMetrics(d)
 
 		if err != nil {
 			err = errors.Wrap(err, "failed to save scraped metrics")

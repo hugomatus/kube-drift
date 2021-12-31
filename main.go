@@ -64,12 +64,14 @@ func main() {
 	var probeAddr string
 	var metricResolution time.Duration
 	var dbStoragePath string
+	var endpoint string
 
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
 	flag.DurationVar(&metricResolution, "metric-resolution", 60*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
+	flag.StringVar(&endpoint, "endpoint", "metrics/cadvisor", "What path to use for storage.")
 
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
@@ -77,6 +79,7 @@ func main() {
 	opts := zap.Options{
 		Development: true,
 	}
+
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
@@ -105,11 +108,13 @@ func main() {
 		c := new(client.Config)
 		c.Init(false)
 
+		client := &client.Client{Client: c.Client}
+
 		z := scraper.Scraper{
-			Config:    c,
+			Client:    client,
 			Store:     s,
 			Frequency: metricResolution,
-			Endpoint:  "metrics/cadvisor",
+			Endpoint:  endpoint,
 		}
 
 		// Run the scraper and scrape @ metricResolution
