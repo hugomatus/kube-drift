@@ -69,7 +69,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
-	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
+	flag.DurationVar(&metricResolution, "metric-resolution", 30*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
 	flag.StringVar(&endpoint, "endpoint", "metrics/cadvisor", "What path to use for storage.")
 

@@ -134,8 +134,3 @@ func getKeyHash() string {
 	key := hex.EncodeToString(h.Sum(nil))
 	return key
 }
-
-func getPartialPrefix(sample *model.Sample) string {
-	prefix := fmt.Sprintf("%s/%s/%s/%s", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
-	return prefix
-}
