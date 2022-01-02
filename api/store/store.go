@@ -117,12 +117,12 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 }
 
 func getUniqueKey(sample *model.Sample) string {
-	key := getKeyHash()
+	key_ := sample.Timestamp.UnixNano()
 
 	prefix := fmt.Sprintf("/%s/%s/%s/%s/", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["container"], sample.Metric["__name__"])
 	prefix = strings.ReplaceAll(prefix, "//", "/none/")
 	prefix = strings.ReplaceAll(prefix, "//", "/")
-	key = fmt.Sprintf("%s%v", prefix, key)
+	key := fmt.Sprintf("%s%v", prefix, key_)
 
 	return key
 }
