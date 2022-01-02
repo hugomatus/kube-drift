@@ -52,7 +52,7 @@ func (s *Store) Save(k string, data []byte) error {
 	if err != nil {
 		appLog.Error(err)
 	}
-	appLog.Infof("Record saved : %s", k)
+	//appLog.Infof("Record saved : %s", k)
 	return nil
 }
 
