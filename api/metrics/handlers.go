@@ -43,8 +43,12 @@ func handleVars(r *http.Request) string {
 		prefixKey = fmt.Sprintf("/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"])
 	}
 
+	if vars["container"] != "" {
+		prefixKey = fmt.Sprintf("/%s/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"], vars["container"])
+	}
+
 	if vars["metric"] != "" {
-		prefixKey = fmt.Sprintf("/%s/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"], vars["metric"])
+		prefixKey = fmt.Sprintf("/%s/%s/%s/%s/%s", vars["name"], vars["namespace"], vars["podname"], vars["container"], vars["metric"])
 	}
 	return prefixKey
 }

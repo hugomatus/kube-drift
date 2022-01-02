@@ -14,7 +14,8 @@ func APIRouter(r *mux.Router, s *store.Store) {
 	r.Path("/{name}").HandlerFunc(metricsHandler(s))
 	r.Path("/{name}/{namespace}").HandlerFunc(metricsHandler(s))
 	r.Path("/{name}/{namespace}/{podname}").HandlerFunc(metricsHandler(s))
-	r.Path("/{name}/{namespace}/{podname}/{metric}").HandlerFunc(metricsHandler(s))
+	r.Path("/{name}/{namespace}/{podname}/{container}").HandlerFunc(metricsHandler(s))
+	r.Path("/{name}/{namespace}/{podname}/{container}/{metric}").HandlerFunc(metricsHandler(s))
 	r.PathPrefix("/").HandlerFunc(defaultHandler)
 }
 

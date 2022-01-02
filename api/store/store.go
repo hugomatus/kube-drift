@@ -52,7 +52,7 @@ func (s *Store) Save(k string, data []byte) error {
 	if err != nil {
 		appLog.Error(err)
 	}
-	//appLog.Infof("Record saved : %s", k)
+	appLog.Infof("Record saved : %s", k)
 	return nil
 }
 
@@ -119,7 +119,7 @@ func (s *Store) SaveMetrics(d map[string][]*model.Sample) (string, error) {
 func getUniqueKey(sample *model.Sample) string {
 	key := getKeyHash()
 
-	prefix := fmt.Sprintf("/%s/%s/%s/%s/", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["__name__"], sample.Metric["container"])
+	prefix := fmt.Sprintf("/%s/%s/%s/%s/", string(sample.Metric["namespace"]), string(sample.Metric["pod"]), sample.Metric["container"], sample.Metric["__name__"])
 	prefix = strings.ReplaceAll(prefix, "//", "/none/")
 	prefix = strings.ReplaceAll(prefix, "//", "/")
 	key = fmt.Sprintf("%s%v", prefix, key)
