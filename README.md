@@ -28,7 +28,7 @@ kubectl expose deployment kube-drift-controller-manager -n kube-drift-system --t
 
 ![demo](assets/kube-drift-api.gif)
 
-## A few key output metrics :
+## Key output metrics :
 
 ### CPU:
 #### container_cpu_user_seconds_total: 
@@ -37,6 +37,18 @@ kubectl expose deployment kube-drift-controller-manager -n kube-drift-system --t
     Cumulative “system” CPU time consumed in seconds
 #### container_cpu_usage_seconds_total: 
     Cumulative CPU time consumed in seconds (sum of the above)
+#### container_cpu_cfs_throttled_seconds_total
+    This measures the total amount of time a certain container has been throttled. Generally, container CPU usage can be throttled to prevent a single busy container from essentially choking other containers by taking away all the available CPU resources.
+    Throttling is usually a good way to ensure a minimum processing power is available for essential services on all running containers. 
+    This metric measures the total time that a container’s CPU usage was throttled, and observing this provides the information one needs to properly reallocate resources to specific containers. 
+    This can be done, for example, by adjusting the setting for cpu shares in Docker
+
+
+### container_cpu_load_average_10s
+
+    This measures the value of container CPU load average over the last 10 seconds. Monitoring CPU usage is vital for ensuring it is being used effectively. 
+    It would also give insight into what container processes are compute intensive, and as such, help advise future CPU allocation.
+
 
 ### Memory:
 #### container_memory_cache: 
@@ -46,10 +58,15 @@ kubectl expose deployment kube-drift-controller-manager -n kube-drift-system --t
 #### container_memory_usage_bytes: 
     Current memory usage in bytes, including all memory regardless of when it was accessed
     container_memory_max_usage_bytes: Maximum memory usage in byte
+### container_memory_failcnt
+    This measures the number of times a container’s memory usage limit is hit. It is good practice to set container memory usage limits, to prevent memory intensive tasks from essentially starving other containers on the same server by using all the available memory.
+    This way, each container has a max amount of memory they can use, and tracking how many times a container hits its memory usage limit would help a user understand if the container memory limits need to be increased, or if debugging needs to be done in order to find the reason for the high memory consumptions.‍
+
 
 ### Disk:
 #### container_fs_io_time_seconds_total: 
     Count of seconds spent doing I/Os
+    This measures the cumulative count of seconds spent doing I/Os. It can be used as a baseline to judge the speed of the processes running on your container, and help advise future optimization efforts
 #### container_fs_io_time_weighted_seconds_total: 
     Cumulative weighted I/O time in seconds
 #### container_fs_writes_bytes_total: 
@@ -67,53 +84,11 @@ kubectl expose deployment kube-drift-controller-manager -n kube-drift-system --t
 #### container_network_transmit_errors_total: 
     Cumulative count of errors encountered while transmitting
 
-### container_cpu_cfs_throttled_seconds_total
+### Tasks and Processes:
 
-This measures the total amount of time a certain container has been throttled. Generally, container CPU usage can be throttled to prevent a single busy container from essentially choking other containers by taking away all the available CPU resources.
-Throttling is usually a good way to ensure a minimum processing power is available for essential services on all running containers. This metric measures the total time that a container’s CPU usage was throttled, and observing this provides the information one needs to properly reallocate resources to specific containers. This can be done, for example, by adjusting the setting for cpu shares in Docker.‍
-
-
-### container_cpu_load_average_10s
-
-This measures the value of container CPU load average over the last 10 seconds. Monitoring CPU usage is vital for ensuring it is being used effectively. It would also give insight into what container processes are compute intensive, and as such, help advise future CPU allocation.‍
-
-
-### container_fs_io_time_seconds_total
-
-This measures the cumulative count of seconds spent doing I/Os. It can be used as a baseline to judge the speed of the processes running on your container, and help advise future optimization efforts.‍
-
-
-### container_memory_usage_bytes
-
-This measures the current memory usage, including all memory regardless of when it was accessed. Tracking this on a per container basis keeps you informed of the memory footprint of the processes on each container, while aiding future optimization or resource allocation efforts.‍
-
-
-### container_memory_failcnt
-
-This measures the number of times a container’s memory usage limit is hit. It is good practice to set container memory usage limits, to prevent memory intensive tasks from essentially starving other containers on the same server by using all the available memory.
-This way, each container has a max amount of memory they can use, and tracking how many times a container hits its memory usage limit would help a user understand if the container memory limits need to be increased, or if debugging needs to be done in order to find the reason for the high memory consumptions.‍
-
-
-### container_network_receive_errors_total
-
-This measures the cumulative count of errors encountered while receiving bytes over your network. Networking on containers can get tricky sometimes, so it’s essential to keep an eye on failures, when they occur. This metric simply lets you know how many failures occurred on inbound traffic, which gives you an idea on where to look for debugging.‍
-
-
-### container_network_transmit_errors_total
-
-This measures the cumulative count of errors encountered while transmitting. Similar to the metric directly above, this would help aid debugging efforts by keeping track of the total number of failures occurred during transmission.‍
-
-
-### container_processes
-
-This metric keeps track of the number of processes currently running inside the container. Knowing the exact state of our containers at all times is essential in keeping them up and running. As such, knowing how many processes are currently running in a specific container would provide insight into whether things are functioning normally, or whether there’s something wrong.‍
-
-
-### container_tasks_state
-
-This metric tracks the number of tasks or processes in a given state (sleeping, running, stopped, uninterruptible, or ioawaiting) in a container. At a glance, this information could be essential in providing real-time information on the status or health of the container and its processes.‍
-
-
-### container_start_time_seconds
-
-Although subtle, this metric tracks a container’s start time in seconds, and could either provide an early indication of trouble, or an indication of a healthy container instance.
+#### container_processes
+    This metric keeps track of the number of processes currently running inside the container. Knowing the exact state of our containers at all times is essential in keeping them up and running. As such, knowing how many processes are currently running in a specific container would provide insight into whether things are functioning normally, or whether there’s something wrong.‍
+#### container_tasks_state
+    This metric tracks the number of tasks or processes in a given state (sleeping, running, stopped, uninterruptible, or ioawaiting) in a container. At a glance, this information could be essential in providing real-time information on the status or health of the container and its processes.‍
+#### container_start_time_seconds
+    Although subtle, this metric tracks a container’s start time in seconds, and could either provide an early indication of trouble, or an indication of a healthy container instance.
