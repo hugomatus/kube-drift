@@ -19,9 +19,9 @@ type Scraper struct {
 	Endpoint      string
 }
 
-func (s *Scraper) Run() {
+func (s *Scraper) Run(ctx context.Context) {
 	// First scrape run to seed the store
-	s.scrape()
+	s.scrape(ctx)
 
 	// Scrape @ every r (metric resolution)
 	ticker := time.NewTicker(s.Frequency)
@@ -34,13 +34,17 @@ func (s *Scraper) Run() {
 			return
 
 		case <-ticker.C:
-			s.scrape()
+			s.scrape(ctx)
 		}
 	}
 }
 
 // Scrape each node in the cluster for stats/summary
-func (s *Scraper) scrape() {
+func (s *Scraper) scrape(ctx context.Context) {
+
+	ctx, cancelTimeout := context.WithTimeout(ctx, s.Frequency)
+	defer cancelTimeout()
+	scrapeTimeout := time.Duration(float64(s.Frequency) * 0.90)
 
 	nodeList, err := s.MetricsClient.Clientset.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
 	nodes := nodeList.Items
@@ -56,8 +60,9 @@ func (s *Scraper) scrape() {
 	for _, n := range nodes {
 
 		go func(node corev1.Node) {
-
-			resp, err := s.MetricsClient.GetMetrics(node)
+			ctx_, cancelTimeout := context.WithTimeout(ctx, scrapeTimeout)
+			defer cancelTimeout()
+			resp, err := s.MetricsClient.GetMetrics(ctx_, node)
 			if err != nil {
 				err = errors.Wrap(err, "failed to scrape metrics")
 				appLog.Error(err)

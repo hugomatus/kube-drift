@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -69,7 +70,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 
-	flag.DurationVar(&metricResolution, "metric-resolution", 30*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
+	flag.DurationVar(&metricResolution, "metric-resolution", 1*time.Minute, "The resolution at which metrics-scraper will poll metrics.")
 	flag.StringVar(&dbStoragePath, "db-storage-path", "/tmp/kube-drift", "What path to use for storage.")
 	flag.StringVar(&endpoint, "endpoint", "metrics/cadvisor", "What path to use for storage.")
 
@@ -116,7 +117,9 @@ func main() {
 		}
 
 		// Run the scraper and scrape @ metricResolution
-		z.Run()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		z.Run(ctx)
 	}(s)
 
 	// Kubernetes Operator setup

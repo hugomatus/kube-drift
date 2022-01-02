@@ -31,11 +31,11 @@ func (c *MetricsClient) Init(inCluster bool, endpoint string) {
 	c.Clientset = c.config.Client
 }
 
-func (c *MetricsClient) GetMetrics(node corev1.Node) ([]*model.Sample, error) {
+func (c *MetricsClient) GetMetrics(ctx context.Context, node corev1.Node) ([]*model.Sample, error) {
 
 	req := c.Clientset.CoreV1().RESTClient().Get().Resource("nodes").Name(node.Name).SubResource("proxy").Suffix(c.Endpoint)
 
-	resp, err := req.DoRaw(context.Background())
+	resp, err := req.DoRaw(ctx)
 	if err != nil {
 		appLog.Errorf("Error getting metrics: %v", err)
 		return nil, err
